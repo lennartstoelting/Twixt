@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" width="device-width" user-scalable="no" initial-scale="1.0" maximum-scale="1.0" minimum-scale="1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Twixt</title>
+        <link rel="stylesheet" href="./style.css" />
+        <link rel="shortcut icon" href="#" />
+        <!-- get rid of weird error message -->
+    </head>
+
+    <body>
+        <div id="container">
+            <canvas id="board" width="720px" height="720px"></canvas>
+        </div>
+        <h3 id="info"></h3>
+        <div id="buttons">
+            <button id="toggleGridlines">Toggle Gridlines</button>
+
+            <button id="restart">Restart Game</button>
+
+            <div id="myModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span class="close">&times;</span>
+                        <h2>Who starts the game?</h2>
+                    </div>
+                    <div class="modal-body">
+                        <button id="yellow-starts">Yellow</button>
+                        <button id="red-starts">Red</button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="undo">Undo last Move</button>
+        </div>
+        <script src="bundle.js"></script>
+    </body>
+</html>
+
+<!-- to start bundling, running and serving, open terminal and type "npm run start"-->
