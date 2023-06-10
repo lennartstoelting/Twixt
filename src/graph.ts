@@ -67,7 +67,7 @@ export class Graph {
 
             let edgeAdded = this.addEdge(node, potentialNode);
             if (!edgeAdded) {
-                console.log("Edge to potential Node (" + potentialNode.x + ", " + potentialNode.y + ") couln't be added");
+                console.log("Edge to potential Node (" + potentialNode.x + ", " + potentialNode.y + ") couldn't be added");
             }
         }
 

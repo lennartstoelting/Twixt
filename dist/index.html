@@ -11,30 +11,33 @@
     </head>
 
     <body>
-        <div id="container">
-            <canvas id="board" width="720px" height="720px"></canvas>
+        <div id="board-container"></div>
+        <div id="info-container">
+            <div id="game-logo"><h1>Twixt</h1></div>
+            <div id="turn-info"></div>
+            <div id="game-buttons">
+                <button id="restart-game">Restart Game</button>
+                <button id="undo-move">Undo Last Move</button>
+            </div>
+            <div id="debug-buttons">
+                <button id="toggle-gridlines">Toggle Gridlines</button>
+                <button id="toggle-blockades">Toggle Blockades</button>
+            </div>
         </div>
-        <h3 id="info"></h3>
-        <div id="buttons">
-            <button id="toggleGridlines">Toggle Gridlines</button>
 
-            <button id="restart">Restart Game</button>
-
-            <div id="myModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <span class="close">&times;</span>
-                        <h2>Who starts the game?</h2>
-                    </div>
-                    <div class="modal-body">
-                        <button id="yellow-starts">Yellow</button>
-                        <button id="red-starts">Red</button>
-                    </div>
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-close-button">&times;</span>
+                    <h2>Who starts the game?</h2>
+                </div>
+                <div class="modal-body">
+                    <button id="yellow-starts">Yellow</button>
+                    <button id="red-starts">Red</button>
                 </div>
             </div>
-
-            <button id="undo">Undo last Move</button>
         </div>
+
         <script src="bundle.js"></script>
     </body>
 </html>
