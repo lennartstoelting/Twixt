@@ -66,7 +66,7 @@ var redStarts = document.getElementById("red-starts");
 redStarts.addEventListener("click", () => {
     restartGame(false);
 });
-modal.style.display = "block";
+// modal.style.display = "block";
 
 // -------------------------------------------------
 
@@ -147,7 +147,7 @@ function drawFinishLines() {
 
     ctx.lineWidth = tileSize / 6;
     ctx.beginPath();
-    ctx.strokeStyle = "#ffffaa";
+    ctx.strokeStyle = "#ff4444";
     ctx.moveTo(corners[0], corners[1]);
     ctx.lineTo(corners[0], corners[3]);
     ctx.moveTo(corners[2], corners[1]);
@@ -155,7 +155,7 @@ function drawFinishLines() {
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.strokeStyle = "#ff4444";
+    ctx.strokeStyle = "#ffffaa";
     ctx.moveTo(corners[1], corners[0]);
     ctx.lineTo(corners[3], corners[0]);
     ctx.moveTo(corners[1], corners[2]);

@@ -37,9 +37,9 @@ body {
 
 #debug-buttons > *,
 #game-buttons > * {
-    flex: 1 1 0px;
-    padding: 3%;
-    margin: 2%;
+    flex: 1 1 0px; /*make buttons grow to same size always*/
+    padding: 20px;
+    margin: 10px;
     background-color: blue;
     color: white;
     box-shadow: 5px 5px 20px gray;
@@ -58,6 +58,7 @@ body {
 
 /* The Modal (background) */
 .modal {
+    display: none;
     position: fixed; /* Stay in place */
     padding-top: 15%;
     z-index: 1; /* Sit on top */

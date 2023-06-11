@@ -28,11 +28,13 @@ export class Graph {
     yellowsTurn: boolean;
     tilesAcross: number;
     nodeList: Node[];
+    nodesVisitedByID: boolean[];
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.nodeList = [];
         this.yellowsTurn = yellowsTurn;
         this.tilesAcross = tilesAcross;
+        this.nodesVisitedByID = new Array<boolean>(this.tilesAcross ** 2).fill(false);
 
         // create all nodes in empty state
         for (let y = 0; y < tilesAcross; y++) {
@@ -54,6 +56,7 @@ export class Graph {
         if (node.state != State.empty) return false;
         node.state = this.yellowsTurn ? State.yellow : State.red;
 
+        let bridgeAdded: boolean = false;
         for (let i = 0; i < 8; i++) {
             // calculate x and y of all 8 potential (knight)moves
             let iInBinary = ("000" + i.toString(2)).slice(-3);
@@ -68,7 +71,13 @@ export class Graph {
             let edgeAdded = this.addEdge(node, potentialNode);
             if (!edgeAdded) {
                 console.log("Edge to potential Node (" + potentialNode.x + ", " + potentialNode.y + ") couldn't be added");
+                continue;
             }
+            bridgeAdded = true;
+        }
+
+        if (bridgeAdded) {
+            this.checkWinCondition();
         }
 
         this.yellowsTurn = !this.yellowsTurn;
@@ -99,11 +108,14 @@ export class Graph {
             return false;
         }
 
-        // add invisible blockades
-        this.addBlockade(node, node1);
-        this.addBlockade(node1, potentialNode);
-        this.addBlockade(potentialNode, potentialNode1);
-        this.addBlockade(potentialNode1, node);
+        const addBlockade = (nodeA: Node, nodeB: Node) => {
+            nodeA.blockades.add(nodeB);
+            nodeB.blockades.add(nodeA);
+        };
+        addBlockade(node, node1);
+        addBlockade(node1, potentialNode);
+        addBlockade(potentialNode, potentialNode1);
+        addBlockade(potentialNode1, node);
 
         // add bridge both ways
         node.edges.push(potentialNode);
@@ -111,8 +123,25 @@ export class Graph {
         return true;
     }
 
-    addBlockade(nodeA: Node, nodeB: Node) {
-        nodeA.blockades.add(nodeB);
-        nodeB.blockades.add(nodeA);
+    checkWinCondition() {
+        let nodeQueue = new Set<Node>();
+        for (let i = 1; i < this.tilesAcross - 1; i++) {
+            let startNode = this.yellowsTurn ? this.getNode(i, 0) : this.getNode(0, i);
+            if ((this.yellowsTurn && startNode.state != State.yellow) || (!this.yellowsTurn && startNode.state != State.red)) continue;
+            nodeQueue.add(startNode);
+        }
+
+        let gameWon: boolean = false;
+        nodeQueue.forEach((node) => {
+            if (gameWon) return;
+            if ((this.yellowsTurn && node.y == this.tilesAcross - 1) || (!this.yellowsTurn && node.x == this.tilesAcross - 1)) {
+                gameWon = true;
+                return;
+            }
+            node.edges.forEach((node) => {
+                nodeQueue.add(node);
+            });
+        });
+        console.log(gameWon);
     }
 }
