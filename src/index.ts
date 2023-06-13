@@ -1,10 +1,11 @@
-import { Graph } from "./graph";
+import { Graph, State } from "./graph";
 
 // -------------------------------------------------
 
 // game logic
 const tilesAcross: number = 8;
 var graph: Graph = new Graph(tilesAcross, true);
+console.log(Graph);
 
 // visuals
 var board: any;
@@ -14,6 +15,7 @@ var tileSize: number;
 var corners: number[];
 var showGridlines: boolean;
 var showBlockades: boolean;
+var gameWonModalShown: boolean; // has the player already seen the game won Modal and wanted to keep playing?
 
 // -------------------------------------------------
 
@@ -25,8 +27,8 @@ drawBoard();
 // game-buttons
 const restartGameButton: HTMLElement = document.getElementById("restart-game");
 restartGameButton.addEventListener("click", () => {
-    // open modal
-    modal.style.display = "block";
+    // open startGameModal
+    startGameModal.style.display = "block";
 });
 const undoMoveButton: HTMLElement = document.getElementById("undo-move");
 undoMoveButton.addEventListener("click", () => {
@@ -45,28 +47,38 @@ toggleBlockadesButton.addEventListener("click", () => {
     drawBoard();
 });
 
-// modal
-var modal = document.getElementById("myModal");
-var modalClose = document.getElementsByClassName("modal-close-button")[0];
-modalClose.addEventListener("click", () => {
-    // close modal on close-button
-    modal.style.display = "none";
+// start / restart game Modal
+var startGameModal = document.getElementById("startGameModal");
+var startGameModalCloseButton = document.getElementsByClassName("modal-close")[0];
+startGameModalCloseButton.addEventListener("click", () => {
+    startGameModal.style.display = "none";
 });
-window.onclick = (event) => {
-    // close modal when clicked outside of modal
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
-};
-var yellowStarts = document.getElementById("yellow-starts");
-yellowStarts.addEventListener("click", () => {
+var yellowStartsButton = document.getElementById("yellow-starts");
+yellowStartsButton.addEventListener("click", () => {
     restartGame(true);
 });
-var redStarts = document.getElementById("red-starts");
-redStarts.addEventListener("click", () => {
+var redStartsButton = document.getElementById("red-starts");
+redStartsButton.addEventListener("click", () => {
     restartGame(false);
 });
-// modal.style.display = "block";
+startGameModal.style.display = "block";
+
+// game won Modal
+var gameWonModal = document.getElementById("gameWonModal");
+var gameWonModalCloseButton = document.getElementsByClassName("modal-close")[1];
+gameWonModalCloseButton.addEventListener("click", () => {
+    gameWonModal.style.display = "none";
+});
+var winnerInfo = document.getElementById("winner-info");
+var restartGameAgainButton: HTMLElement = document.getElementById("restart-game-again");
+restartGameAgainButton.addEventListener("click", () => {
+    gameWonModal.style.display = "none";
+    startGameModal.style.display = "block";
+});
+var keepPlayingButton: HTMLElement = document.getElementById("keep-playing");
+keepPlayingButton.addEventListener("click", () => {
+    gameWonModal.style.display = "none";
+});
 
 // -------------------------------------------------
 
@@ -176,11 +188,17 @@ function boardClicked(event: { currentTarget: { getBoundingClientRect: () => any
     if (nodePlayed) {
         drawBoard();
     }
+    if (graph.gameWon != State.empty && !gameWonModalShown) {
+        winnerInfo.innerHTML = graph.gameWon + " won!";
+        gameWonModal.style.display = "block";
+        gameWonModalShown = true;
+    }
 }
 
 function restartGame(yellowStarts: boolean) {
     graph = new Graph(tilesAcross, true);
     graph.yellowsTurn = yellowStarts;
-    modal.style.display = "none";
+    startGameModal.style.display = "none";
+    gameWonModalShown = false;
     drawBoard();
 }

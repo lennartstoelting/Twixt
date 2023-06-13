@@ -19,6 +19,19 @@ body {
     }
 }
 
+button {
+    padding: 20px;
+    margin: 10px;
+    box-shadow: 5px 5px 20px gray;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    transition: 0.25s;
+}
+
 #info-container {
     flex-grow: 1;
     text-align: center;
@@ -36,21 +49,18 @@ body {
 }
 
 #debug-buttons > *,
-#game-buttons > * {
+#game-buttons > *,
+#restart-game-again,
+#keep-playing {
     flex: 1 1 0px; /*make buttons grow to same size always*/
-    padding: 20px;
-    margin: 10px;
     background-color: blue;
     color: white;
-    box-shadow: 5px 5px 20px gray;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
 }
 
 #debug-buttons > *:hover,
-#game-buttons > *:hover {
-    transition: 0.25s;
+#game-buttons > *:hover,
+#restart-game-again:hover,
+#keep-playing:hover {
     background-color: rgb(119, 119, 255);
 }
 
@@ -70,15 +80,15 @@ body {
 }
 
 /* The Close Button */
-.modal-close-button {
+.modal-close {
     color: #5a5a5a;
     float: right;
     font-size: 28px;
     font-weight: bold;
 }
 
-.modal-close-button:hover,
-.modal-close-button:focus {
+.modal-close:hover,
+.modal-close:focus {
     color: black;
     text-decoration: none;
     cursor: pointer;
@@ -113,19 +123,22 @@ body {
 .modal-body > * {
     flex-grow: 1;
     color: black;
-    box-shadow: 5px 5px 20px gray;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    padding: 1%;
 }
 
 #yellow-starts {
     background-color: yellow;
 }
 
+#yellow-starts:hover {
+    background-color: rgb(202, 202, 24);
+}
+
 #red-starts {
     background-color: red;
+}
+
+#red-starts:hover {
+    background-color: rgb(207, 30, 30);
 }
 
 @keyframes animatetop {
