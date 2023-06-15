@@ -1,3 +1,4 @@
+/* position and layout */
 body {
     margin: 0px;
     display: flex;
@@ -19,19 +20,6 @@ body {
     }
 }
 
-button {
-    padding: 20px;
-    margin: 10px;
-    box-shadow: 5px 5px 20px gray;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    transition: 0.25s;
-}
-
 #info-container {
     flex-grow: 1;
     text-align: center;
@@ -48,20 +36,21 @@ button:hover {
     flex-flow: row wrap;
 }
 
-#debug-buttons > *,
-#game-buttons > *,
-#restart-game-again,
-#keep-playing {
+button {
+    padding: 20px;
+    margin: 10px;
+    box-shadow: 5px 5px 20px gray;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
     flex: 1 1 0px; /*make buttons grow to same size always*/
     background-color: blue;
     color: white;
 }
 
-#debug-buttons > *:hover,
-#game-buttons > *:hover,
-#restart-game-again:hover,
-#keep-playing:hover {
+button:hover {
     background-color: rgb(119, 119, 255);
+    transition: 0.25s;
 }
 
 /* --------------------------- modal stuff --------------------------- */
@@ -121,7 +110,6 @@ button:hover {
 }
 
 .modal-body > * {
-    flex-grow: 1;
     color: black;
 }
 
@@ -138,7 +126,7 @@ button:hover {
 }
 
 #red-starts:hover {
-    background-color: rgb(207, 30, 30);
+    background-color: rgb(250, 105, 105);
 }
 
 @keyframes animatetop {

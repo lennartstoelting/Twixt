@@ -1,11 +1,12 @@
 import { Graph, State } from "./graph";
 
 // -------------------------------------------------
+// global variables
+// -------------------------------------------------
 
 // game logic
-const tilesAcross: number = 8;
+const tilesAcross: number = 16;
 var graph: Graph = new Graph(tilesAcross, true);
-console.log(Graph);
 
 // visuals
 var board: any;
@@ -18,68 +19,84 @@ var showBlockades: boolean;
 var gameWonModalShown: boolean; // has the player already seen the game won Modal and wanted to keep playing?
 
 // -------------------------------------------------
+// dom elements and Event listeners
+// -------------------------------------------------
 
 const boardContainer = document.getElementById("board-container");
-window.addEventListener("resize", drawBoard);
 const turnInfo = document.getElementById("turn-info");
-drawBoard();
-
 // game-buttons
 const restartGameButton: HTMLElement = document.getElementById("restart-game");
+const undoMoveButton: HTMLElement = document.getElementById("undo-move");
+// debug-buttons
+const toggleGridlinesButton: HTMLElement = document.getElementById("toggle-gridlines");
+const toggleBlockadesButton: HTMLElement = document.getElementById("toggle-blockades");
+// start / restart game modal
+var startGameModal = document.getElementById("startGameModal");
+var startGameModalCloseButton = document.getElementsByClassName("modal-close")[0];
+var yellowStartsButton = document.getElementById("yellow-starts");
+var redStartsButton = document.getElementById("red-starts");
+// game won modal
+var gameWonModal = document.getElementById("gameWonModal");
+var gameWonModalCloseButton = document.getElementsByClassName("modal-close")[1];
+var winnerInfo = document.getElementById("winner-info");
+var restartGameAgainButton: HTMLElement = document.getElementById("restart-game-again");
+var keepPlayingButton: HTMLElement = document.getElementById("keep-playing");
+
+window.addEventListener("resize", drawBoard);
+
 restartGameButton.addEventListener("click", () => {
-    // open startGameModal
     startGameModal.style.display = "block";
 });
-const undoMoveButton: HTMLElement = document.getElementById("undo-move");
 undoMoveButton.addEventListener("click", () => {
     console.log("not yet implemented");
 });
-
-// debug-buttons
-const toggleGridlinesButton: HTMLElement = document.getElementById("toggle-gridlines");
 toggleGridlinesButton.addEventListener("click", () => {
     showGridlines = !showGridlines;
     drawBoard();
 });
-const toggleBlockadesButton: HTMLElement = document.getElementById("toggle-blockades");
 toggleBlockadesButton.addEventListener("click", () => {
     showBlockades = !showBlockades;
     drawBoard();
 });
 
-// start / restart game Modal
-var startGameModal = document.getElementById("startGameModal");
-var startGameModalCloseButton = document.getElementsByClassName("modal-close")[0];
 startGameModalCloseButton.addEventListener("click", () => {
     startGameModal.style.display = "none";
 });
-var yellowStartsButton = document.getElementById("yellow-starts");
 yellowStartsButton.addEventListener("click", () => {
     restartGame(true);
 });
-var redStartsButton = document.getElementById("red-starts");
 redStartsButton.addEventListener("click", () => {
     restartGame(false);
 });
-startGameModal.style.display = "block";
 
-// game won Modal
-var gameWonModal = document.getElementById("gameWonModal");
-var gameWonModalCloseButton = document.getElementsByClassName("modal-close")[1];
 gameWonModalCloseButton.addEventListener("click", () => {
     gameWonModal.style.display = "none";
 });
-var winnerInfo = document.getElementById("winner-info");
-var restartGameAgainButton: HTMLElement = document.getElementById("restart-game-again");
 restartGameAgainButton.addEventListener("click", () => {
     gameWonModal.style.display = "none";
     startGameModal.style.display = "block";
 });
-var keepPlayingButton: HTMLElement = document.getElementById("keep-playing");
 keepPlayingButton.addEventListener("click", () => {
     gameWonModal.style.display = "none";
 });
 
+drawBoard();
+startGameModal.style.display = "block";
+
+// -------------------------------------------------
+// player interactions
+// -------------------------------------------------
+
+function restartGame(yellowStarts: boolean) {
+    graph = new Graph(tilesAcross, true);
+    graph.yellowsTurn = yellowStarts;
+    startGameModal.style.display = "none";
+    gameWonModalShown = false;
+    drawBoard();
+}
+
+// -------------------------------------------------
+// refresh drawing of canvas
 // -------------------------------------------------
 
 function drawBoard() {
@@ -193,12 +210,4 @@ function boardClicked(event: { currentTarget: { getBoundingClientRect: () => any
         gameWonModal.style.display = "block";
         gameWonModalShown = true;
     }
-}
-
-function restartGame(yellowStarts: boolean) {
-    graph = new Graph(tilesAcross, true);
-    graph.yellowsTurn = yellowStarts;
-    startGameModal.style.display = "none";
-    gameWonModalShown = false;
-    drawBoard();
 }
