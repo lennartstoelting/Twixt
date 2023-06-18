@@ -1,3 +1,4 @@
+import { Controller } from "./controller";
 import { Graph, State } from "./graph";
 
 // -------------------------------------------------
@@ -5,8 +6,7 @@ import { Graph, State } from "./graph";
 // -------------------------------------------------
 
 // game logic
-const tilesAcross: number = 16;
-var graph: Graph = new Graph(tilesAcross, true);
+var controller = new Controller();
 
 // visuals
 var board: any;
@@ -48,7 +48,7 @@ restartGameButton.addEventListener("click", () => {
     startGameModal.style.display = "block";
 });
 undoMoveButton.addEventListener("click", () => {
-    console.log("not yet implemented");
+    controller.undoMove() ? drawBoard() : console.log("no more positions in history array");
 });
 toggleGridlinesButton.addEventListener("click", () => {
     showGridlines = !showGridlines;
@@ -81,15 +81,13 @@ keepPlayingButton.addEventListener("click", () => {
 });
 
 drawBoard();
-startGameModal.style.display = "block";
 
 // -------------------------------------------------
 // player interactions
 // -------------------------------------------------
 
 function restartGame(yellowStarts: boolean) {
-    graph = new Graph(tilesAcross, true);
-    graph.yellowsTurn = yellowStarts;
+    controller.restartGame(yellowStarts);
     startGameModal.style.display = "none";
     gameWonModalShown = false;
     drawBoard();
@@ -100,7 +98,7 @@ function restartGame(yellowStarts: boolean) {
 // -------------------------------------------------
 
 function drawBoard() {
-    turnInfo.innerHTML = "It's " + (graph.yellowsTurn ? "yellow" : "red") + "'s turn";
+    turnInfo.innerHTML = "It's " + (controller.mainGraph.yellowsTurn ? "yellow" : "red") + "'s turn";
     boardContainer.innerHTML = "";
 
     createCanvas();
@@ -109,7 +107,7 @@ function drawBoard() {
     }
     drawFinishLines();
 
-    graph.nodeList.forEach((node) => {
+    controller.mainGraph.nodeList.forEach((node) => {
         let nodeCenterX = node.x * tileSize + tileSize / 2;
         let nodeCenterY = node.y * tileSize + tileSize / 2;
 
@@ -155,7 +153,7 @@ function createCanvas() {
 
     ctx = board.getContext("2d");
     boardSideLength = board.clientWidth;
-    tileSize = boardSideLength / graph.tilesAcross;
+    tileSize = boardSideLength / controller.mainGraph.tilesAcross;
 }
 
 function drawGridlines() {
@@ -198,15 +196,15 @@ function boardClicked(event: { currentTarget: { getBoundingClientRect: () => any
     var x = Math.floor((event.clientX - rect.left) / tileSize);
     var y = Math.floor((event.clientY - rect.top) / tileSize);
     // the corners of the playing field
-    if ((x == 0 || x == graph.tilesAcross - 1) && (y == 0 || y == graph.tilesAcross - 1)) return;
+    if ((x == 0 || x == controller.mainGraph.tilesAcross - 1) && (y == 0 || y == controller.mainGraph.tilesAcross - 1)) return;
     // console.log("clicked hole: (x: " + x + ", y: " + y + ")");
 
-    let nodePlayed = graph.tryPlayingNode(x, y);
+    let nodePlayed = controller.tryPlacingPin(x, y);
     if (nodePlayed) {
         drawBoard();
     }
-    if (graph.gameWon != State.empty && !gameWonModalShown) {
-        winnerInfo.innerHTML = graph.gameWon + " won!";
+    if (controller.mainGraph.gameWon != State.empty && !gameWonModalShown) {
+        winnerInfo.innerHTML = controller.mainGraph.gameWon + " won!";
         gameWonModal.style.display = "block";
         gameWonModalShown = true;
     }

@@ -29,6 +29,7 @@ export class Graph {
     tilesAcross: number;
     nodeList: Node[];
     gameWon: State;
+    evaluation: number;
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.nodeList = [];
@@ -45,13 +46,19 @@ export class Graph {
         }
     }
 
+    clone() {
+        let clonedGraph = new Graph(this.tilesAcross, this.yellowsTurn);
+        clonedGraph.nodeList = structuredClone(this.nodeList);
+        return clonedGraph;
+    }
+
     getNode(x: number, y: number): Node {
         return this.nodeList.find((node) => {
             return node.x == x && node.y == y;
         });
     }
 
-    tryPlayingNode(x: number, y: number) {
+    tryAddingNode(x: number, y: number) {
         let node = this.getNode(x, y);
 
         if (node.state != State.empty) return false;
