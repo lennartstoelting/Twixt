@@ -6,19 +6,18 @@ import { Graph } from "./graph";
 
 var tilesAcrossDefault = 6;
 
-export class Controller {
+class Model {
     mainGraph: Graph;
     history: Graph[];
-    yellowComp: boolean;
-    redComp: boolean;
+    // yellowComp: boolean;
+    // redComp: boolean;
 
     constructor() {
         this.mainGraph = new Graph(tilesAcrossDefault, true);
         this.history = [];
-        this.yellowComp = false;
-        this.redComp = false;
     }
 
+    // these things might need to move
     restartGame(yellowStarts: boolean) {
         this.mainGraph = new Graph(tilesAcrossDefault, yellowStarts);
         this.history = [];
@@ -40,3 +39,5 @@ export class Controller {
         return true;
     }
 }
+
+export default Model;

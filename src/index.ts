@@ -1,211 +1,140 @@
-import { Controller } from "./controller";
-import { Graph, State } from "./graph";
+import { State } from "./graph";
+import Model from "./model";
+import View from "./view";
 
-// -------------------------------------------------
-// global variables
-// -------------------------------------------------
+// TODO implement the gameWonModalShown to a point that it is usable again
+// clean up and organize code a lot
+// potentially move some functionality from model to controller/index
+class Controller {
+    model: Model;
+    view: View;
 
-// game logic
-var controller = new Controller();
+    showGridlines: boolean;
+    showBlockades: boolean;
+    gameWonModalShown: boolean; // has the player already seen the game won Modal and wanted to keep playing?
 
-// visuals
-var board: any;
-var ctx: any;
-var boardSideLength: number;
-var tileSize: number;
-var corners: number[];
-var showGridlines: boolean;
-var showBlockades: boolean;
-var gameWonModalShown: boolean; // has the player already seen the game won Modal and wanted to keep playing?
+    // game-buttons
+    restartGameButton: HTMLElement;
+    undoMoveButton: HTMLElement;
+    // debug-buttons
+    toggleGridlinesButton: HTMLElement;
+    toggleBlockadesButton: HTMLElement;
+    // start / restart game modal
+    startGameModal: HTMLElement;
+    startGameModalCloseButton: any;
+    yellowStartsButton: HTMLElement;
+    redStartsButton: HTMLElement;
+    // game won modal
+    gameWonModal: HTMLElement;
+    gameWonModalCloseButton: any;
+    winnerInfo: HTMLElement;
+    restartGameAgainButton: HTMLElement;
+    keepPlayingButton: HTMLElement;
 
-// -------------------------------------------------
-// dom elements and Event listeners
-// -------------------------------------------------
+    constructor() {
+        this.model = new Model();
+        this.view = new View();
+        this.updateView();
 
-const boardContainer = document.getElementById("board-container");
-const turnInfo = document.getElementById("turn-info");
-// game-buttons
-const restartGameButton: HTMLElement = document.getElementById("restart-game");
-const undoMoveButton: HTMLElement = document.getElementById("undo-move");
-// debug-buttons
-const toggleGridlinesButton: HTMLElement = document.getElementById("toggle-gridlines");
-const toggleBlockadesButton: HTMLElement = document.getElementById("toggle-blockades");
-// start / restart game modal
-var startGameModal = document.getElementById("startGameModal");
-var startGameModalCloseButton = document.getElementsByClassName("modal-close")[0];
-var yellowStartsButton = document.getElementById("yellow-starts");
-var redStartsButton = document.getElementById("red-starts");
-// game won modal
-var gameWonModal = document.getElementById("gameWonModal");
-var gameWonModalCloseButton = document.getElementsByClassName("modal-close")[1];
-var winnerInfo = document.getElementById("winner-info");
-var restartGameAgainButton: HTMLElement = document.getElementById("restart-game-again");
-var keepPlayingButton: HTMLElement = document.getElementById("keep-playing");
+        this.restartGameButton = document.getElementById("restart-game");
+        this.undoMoveButton = document.getElementById("undo-move");
+        this.toggleGridlinesButton = document.getElementById("toggle-gridlines");
+        this.toggleBlockadesButton = document.getElementById("toggle-blockades");
+        this.startGameModal = document.getElementById("startGameModal");
+        this.startGameModalCloseButton = document.getElementsByClassName("modal-close")[0];
+        this.yellowStartsButton = document.getElementById("yellow-starts");
+        this.redStartsButton = document.getElementById("red-starts");
+        this.gameWonModal = document.getElementById("gameWonModal");
+        this.gameWonModalCloseButton = document.getElementsByClassName("modal-close")[1];
+        this.winnerInfo = document.getElementById("winner-info");
+        this.restartGameAgainButton = document.getElementById("restart-game-again");
+        this.keepPlayingButton = document.getElementById("keep-playing");
 
-window.addEventListener("resize", drawBoard);
-
-restartGameButton.addEventListener("click", () => {
-    startGameModal.style.display = "block";
-});
-undoMoveButton.addEventListener("click", () => {
-    controller.undoMove() ? drawBoard() : console.log("no more positions in history array");
-});
-toggleGridlinesButton.addEventListener("click", () => {
-    showGridlines = !showGridlines;
-    drawBoard();
-});
-toggleBlockadesButton.addEventListener("click", () => {
-    showBlockades = !showBlockades;
-    drawBoard();
-});
-
-startGameModalCloseButton.addEventListener("click", () => {
-    startGameModal.style.display = "none";
-});
-yellowStartsButton.addEventListener("click", () => {
-    restartGame(true);
-});
-redStartsButton.addEventListener("click", () => {
-    restartGame(false);
-});
-
-gameWonModalCloseButton.addEventListener("click", () => {
-    gameWonModal.style.display = "none";
-});
-restartGameAgainButton.addEventListener("click", () => {
-    gameWonModal.style.display = "none";
-    startGameModal.style.display = "block";
-});
-keepPlayingButton.addEventListener("click", () => {
-    gameWonModal.style.display = "none";
-});
-
-drawBoard();
-
-// -------------------------------------------------
-// player interactions
-// -------------------------------------------------
-
-function restartGame(yellowStarts: boolean) {
-    controller.restartGame(yellowStarts);
-    startGameModal.style.display = "none";
-    gameWonModalShown = false;
-    drawBoard();
-}
-
-// -------------------------------------------------
-// refresh drawing of canvas
-// -------------------------------------------------
-
-function drawBoard() {
-    turnInfo.innerHTML = "It's " + (controller.mainGraph.yellowsTurn ? "yellow" : "red") + "'s turn";
-    boardContainer.innerHTML = "";
-
-    createCanvas();
-    if (showGridlines) {
-        drawGridlines();
-    }
-    drawFinishLines();
-
-    controller.mainGraph.nodeList.forEach((node) => {
-        let nodeCenterX = node.x * tileSize + tileSize / 2;
-        let nodeCenterY = node.y * tileSize + tileSize / 2;
-
-        // draw hole or pin
-        ctx.beginPath();
-        ctx.arc(nodeCenterX, nodeCenterY, tileSize / 6, 0, 2 * Math.PI);
-        ctx.fillStyle = node.state;
-        ctx.fill();
-
-        // draw bridges
-        ctx.lineWidth = tileSize / 12;
-        ctx.strokeStyle = node.state;
-        node.edges.forEach((edge) => {
-            ctx.beginPath();
-            ctx.moveTo(nodeCenterX, nodeCenterY);
-            ctx.lineTo(edge.x * tileSize + tileSize / 2, edge.y * tileSize + tileSize / 2);
-            ctx.stroke();
+        window.addEventListener("resize", () => {
+            this.updateView();
         });
 
-        // draw blockade
-        if (!showBlockades) return;
-        ctx.strokeStyle = "black";
-        node.blockades.forEach((block) => {
-            ctx.beginPath();
-            ctx.moveTo(nodeCenterX, nodeCenterY);
-            ctx.lineTo(block.x * tileSize + tileSize / 2, block.y * tileSize + tileSize / 2);
-            ctx.stroke();
+        this.restartGameButton.addEventListener("click", () => {
+            this.startGameModal.style.display = "block";
         });
-    });
-}
+        this.undoMoveButton.addEventListener("click", () => {
+            this.model.undoMove() ? this.updateView() : console.log("no more positions in history array");
+        });
+        this.toggleGridlinesButton.addEventListener("click", () => {
+            this.showGridlines = !this.showGridlines;
+            this.updateView();
+        });
+        this.toggleBlockadesButton.addEventListener("click", () => {
+            this.showBlockades = !this.showBlockades;
+            this.updateView();
+        });
+        this.startGameModalCloseButton.addEventListener("click", () => {
+            this.startGameModal.style.display = "none";
+        });
+        this.yellowStartsButton.addEventListener("click", () => {
+            this.model.restartGame(true);
+            this.updateView();
+            this.startGameModal.style.display = "none";
+        });
+        this.redStartsButton.addEventListener("click", () => {
+            this.model.restartGame(false);
+            this.updateView();
+            this.startGameModal.style.display = "none";
+        });
 
-function createCanvas() {
-    board = document.createElement("canvas");
-    board.id = "board";
-    board.style.background = "blue";
-    board.style.boxShadow = "5px 5px 20px gray";
-    board.style.borderRadius = "3%";
-    board.style.margin = "1%";
-    board.width = boardContainer.clientWidth * 0.98;
-    board.height = boardContainer.clientHeight * 0.98;
-    board.addEventListener("click", boardClicked);
-    boardContainer.appendChild(board);
-
-    ctx = board.getContext("2d");
-    boardSideLength = board.clientWidth;
-    tileSize = boardSideLength / controller.mainGraph.tilesAcross;
-}
-
-function drawGridlines() {
-    ctx.beginPath();
-    for (let l = 0; l <= boardSideLength; l += tileSize) {
-        ctx.moveTo(l, 0);
-        ctx.lineTo(l, boardSideLength);
-        ctx.moveTo(0, l);
-        ctx.lineTo(boardSideLength, l);
+        this.gameWonModalCloseButton.addEventListener("click", () => {
+            this.gameWonModal.style.display = "none";
+        });
+        this.restartGameAgainButton.addEventListener("click", () => {
+            this.gameWonModal.style.display = "none";
+            this.startGameModal.style.display = "block";
+        });
+        this.keepPlayingButton.addEventListener("click", () => {
+            this.gameWonModal.style.display = "none";
+        });
     }
-    ctx.lineWidth = tileSize / 25;
-    ctx.strokeStyle = "white";
-    ctx.stroke();
-}
 
-function drawFinishLines() {
-    corners = [tileSize, tileSize + tileSize / 4, boardSideLength - tileSize, boardSideLength - tileSize - tileSize / 4];
-
-    ctx.lineWidth = tileSize / 6;
-    ctx.beginPath();
-    ctx.strokeStyle = "#ff4444";
-    ctx.moveTo(corners[0], corners[1]);
-    ctx.lineTo(corners[0], corners[3]);
-    ctx.moveTo(corners[2], corners[1]);
-    ctx.lineTo(corners[2], corners[3]);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.strokeStyle = "#ffffaa";
-    ctx.moveTo(corners[1], corners[0]);
-    ctx.lineTo(corners[3], corners[0]);
-    ctx.moveTo(corners[1], corners[2]);
-    ctx.lineTo(corners[3], corners[2]);
-    ctx.stroke();
-}
-
-function boardClicked(event: { currentTarget: { getBoundingClientRect: () => any }; clientX: number; clientY: number }) {
-    // calculate which tile was clicked from global coordinates to matrix coordinates
-    var rect = event.currentTarget.getBoundingClientRect();
-    var x = Math.floor((event.clientX - rect.left) / tileSize);
-    var y = Math.floor((event.clientY - rect.top) / tileSize);
-    // the corners of the playing field
-    if ((x == 0 || x == controller.mainGraph.tilesAcross - 1) && (y == 0 || y == controller.mainGraph.tilesAcross - 1)) return;
-    // console.log("clicked hole: (x: " + x + ", y: " + y + ")");
-
-    let nodePlayed = controller.tryPlacingPin(x, y);
-    if (nodePlayed) {
-        drawBoard();
+    updateView() {
+        this.view.drawBoard(this.model.mainGraph, this.showGridlines, this.showBlockades);
+        this.view.board.addEventListener("click", () => this.boardClicked(event));
     }
-    if (controller.mainGraph.gameWon != State.empty && !gameWonModalShown) {
-        winnerInfo.innerHTML = controller.mainGraph.gameWon + " won!";
-        gameWonModal.style.display = "block";
-        gameWonModalShown = true;
+
+    boardClicked(event: any /*, view: View*/) {
+        let rect = this.view.board.getBoundingClientRect();
+        // calculate which tile was clicked from global coordinates to matrix coordinates
+        var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
+        var y = Math.floor((event.clientY - rect.top) / this.view.tileSize);
+        // the corners of the playing field
+        if ((x == 0 || x == this.model.mainGraph.tilesAcross - 1) && (y == 0 || y == this.model.mainGraph.tilesAcross - 1)) return;
+        // console.log("clicked hole: (x: " + x + ", y: " + y + ")");
+        let nodePlayed = this.model.tryPlacingPin(x, y);
+        if (nodePlayed) {
+            this.updateView();
+        }
+        if (this.model.mainGraph.gameWon != State.empty && !this.gameWonModalShown) {
+            this.winnerInfo.innerHTML = this.model.mainGraph.gameWon + " won!";
+            this.gameWonModal.style.display = "block";
+            this.gameWonModalShown = true;
+        }
     }
+    // // possible rewrite with ideas from this https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
+    // boardClicked(event: { currentTarget: { getBoundingClientRect: () => any }; clientX: number; clientY: number }) {
+    //     calculate which tile was clicked from global coordinates to matrix coordinates
+    //     var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
+    //     var y = Math.floor((event.clientY - rect.top) / this.view.tileSize);
+    //     // the corners of the playing field
+    //     if ((x == 0 || x == this.model.mainGraph.tilesAcross - 1) && (y == 0 || y == this.model.mainGraph.tilesAcross - 1)) return;
+    //     console.log("clicked hole: (x: " + x + ", y: " + y + ")");
+    //     let nodePlayed = this.model.tryPlacingPin(x, y);
+    //     if (nodePlayed) {
+    //         this.updateView();
+    //     }
+    //     if (this.model.mainGraph.gameWon != State.empty && !this.gameWonModalShown) {
+    //         this.winnerInfo.innerHTML = this.model.mainGraph.gameWon + " won!";
+    //         this.gameWonModal.style.display = "block";
+    //         this.gameWonModalShown = true;
+    //     }
+    // }
 }
+
+const app = new Controller();
