@@ -9,8 +9,6 @@ var tilesAcrossDefault = 6;
 class Model {
     mainGraph: Graph;
     history: Graph[];
-    // yellowComp: boolean;
-    // redComp: boolean;
 
     constructor() {
         this.mainGraph = new Graph(tilesAcrossDefault, true);

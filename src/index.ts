@@ -2,6 +2,8 @@ import { State } from "./graph";
 import Model from "./model";
 import View from "./view";
 
+/** handles all input, checks in with model and displays the result with view */
+
 // TODO implement the gameWonModalShown to a point that it is usable again
 // clean up and organize code a lot
 // potentially move some functionality from model to controller/index
@@ -75,15 +77,18 @@ class Controller {
             this.model.restartGame(true);
             this.updateView();
             this.startGameModal.style.display = "none";
+            this.gameWonModalShown = false;
         });
         this.redStartsButton.addEventListener("click", () => {
             this.model.restartGame(false);
             this.updateView();
             this.startGameModal.style.display = "none";
+            this.gameWonModalShown = false;
         });
 
         this.gameWonModalCloseButton.addEventListener("click", () => {
             this.gameWonModal.style.display = "none";
+            this.gameWonModalShown = true;
         });
         this.restartGameAgainButton.addEventListener("click", () => {
             this.gameWonModal.style.display = "none";
@@ -91,6 +96,7 @@ class Controller {
         });
         this.keepPlayingButton.addEventListener("click", () => {
             this.gameWonModal.style.display = "none";
+            this.gameWonModalShown = true;
         });
     }
 
@@ -99,7 +105,7 @@ class Controller {
         this.view.board.addEventListener("click", () => this.boardClicked(event));
     }
 
-    boardClicked(event: any /*, view: View*/) {
+    boardClicked(event: any) {
         let rect = this.view.board.getBoundingClientRect();
         // calculate which tile was clicked from global coordinates to matrix coordinates
         var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
@@ -117,24 +123,6 @@ class Controller {
             this.gameWonModalShown = true;
         }
     }
-    // // possible rewrite with ideas from this https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
-    // boardClicked(event: { currentTarget: { getBoundingClientRect: () => any }; clientX: number; clientY: number }) {
-    //     calculate which tile was clicked from global coordinates to matrix coordinates
-    //     var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
-    //     var y = Math.floor((event.clientY - rect.top) / this.view.tileSize);
-    //     // the corners of the playing field
-    //     if ((x == 0 || x == this.model.mainGraph.tilesAcross - 1) && (y == 0 || y == this.model.mainGraph.tilesAcross - 1)) return;
-    //     console.log("clicked hole: (x: " + x + ", y: " + y + ")");
-    //     let nodePlayed = this.model.tryPlacingPin(x, y);
-    //     if (nodePlayed) {
-    //         this.updateView();
-    //     }
-    //     if (this.model.mainGraph.gameWon != State.empty && !this.gameWonModalShown) {
-    //         this.winnerInfo.innerHTML = this.model.mainGraph.gameWon + " won!";
-    //         this.gameWonModal.style.display = "block";
-    //         this.gameWonModalShown = true;
-    //     }
-    // }
 }
 
 const app = new Controller();

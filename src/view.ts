@@ -1,4 +1,4 @@
-import { Graph, State } from "./graph";
+import { Graph } from "./graph";
 
 class View {
     board: any;
@@ -16,6 +16,7 @@ class View {
     }
 
     drawBoard(graph: Graph, gridlines: boolean, blockades: boolean) {
+        // this line could be made shorter
         this.turnInfo.innerHTML = "It's " + (graph.yellowsTurn ? "yellow" : "red") + "'s turn";
         this.boardContainer.innerHTML = "";
 
@@ -57,6 +58,7 @@ class View {
         });
     }
 
+    // this can probably be changed with clearRect instead of creating a whole new instance of the canvas
     _createCanvas(graph: Graph) {
         this.board = document.createElement("canvas");
         this.board.id = "board";
