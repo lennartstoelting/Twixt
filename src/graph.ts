@@ -1,34 +1,38 @@
-export class Node {
-    x: number;
-    y: number;
-    state: number;
-    edges: Node[];
-    blockades: Set<Node>;
-    id: number;
+// export class Node {
+//     x: number;
+//     y: number;
+//     state: number;
+//     edges: Node[];
+//     blockades: Set<Node>;
+//     id: number;
 
-    constructor(x: number, y: number, tilesAcross: number, state: number) {
-        this.x = x;
-        this.y = y;
-        this.state = state;
-        this.edges = [];
-        this.blockades = new Set<Node>();
-        this.id = y * tilesAcross + x;
-    }
-}
+//     constructor(x: number, y: number, tilesAcross: number, state: number) {
+//         this.x = x;
+//         this.y = y;
+//         this.state = state;
+//         this.edges = [];
+//         this.blockades = new Set<Node>();
+//         this.id = y * tilesAcross + x;
+//     }
+// }
 
 // -------------------------------------------------
 
+/**
+ * for understanding the bitwise operations
+ * https://www.w3schools.com/js/js_bitwise.asp
+ */
+
 export class Graph {
-    yellowsTurn: boolean;
     tilesAcross: number;
-    nodeList: Node[];
+
+    yellowsTurn: boolean;
     gameWon: number;
     evaluation: number;
 
     matrix: number[][];
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
-        this.nodeList = [];
         this.yellowsTurn = yellowsTurn;
         this.tilesAcross = tilesAcross;
         this.gameWon = 0;
@@ -36,22 +40,15 @@ export class Graph {
             .fill(0)
             .map(() => Array(tilesAcross).fill(0));
 
-        // create all nodes in empty state
-        for (let y = 0; y < tilesAcross; y++) {
-            for (let x = 0; x < tilesAcross; x++) {
-                if ((x == 0 || x == tilesAcross - 1) && (y == 0 || y == tilesAcross - 1)) {
-                    // the corners of the playing field
-                    this.matrix[x][y] = 3;
-                    continue;
-                }
-                this.nodeList.push(new Node(x, y, tilesAcross, 0));
-            }
-        }
+        // corners, potentially easier to implement
+        this.matrix[0][0] = 3;
+        this.matrix[0][tilesAcross - 1] = 3;
+        this.matrix[tilesAcross - 1][0] = 3;
+        this.matrix[tilesAcross - 1][tilesAcross - 1] = 3;
     }
 
     clone(): Graph {
         let clonedGraph = new Graph(this.tilesAcross, this.yellowsTurn);
-        clonedGraph.nodeList = structuredClone(this.nodeList);
         clonedGraph.matrix = structuredClone(this.matrix);
         return clonedGraph;
     }
@@ -63,28 +60,30 @@ export class Graph {
         // connect bridges
         let bridgeAdded: boolean = false;
         for (let i = 0; i < 8; i++) {
-            let newCoord = numberToXY(i);
-
-            let potX = x + newCoord[0];
-            let potY = y + newCoord[1];
+            let newCoords = pointInDirectionOfIndex(x, y, i);
 
             // if outside or a corner or not the same color
-            // TODO rework this later on!!
             if (
-                this.matrix[potX] == undefined ||
-                this.matrix[potX][potY] == undefined ||
-                this.matrix[potX][potY] == 3 ||
-                !((this.matrix[potX][potY] & 3) == (this.matrix[x][y] & 3))
+                this.matrix[newCoords[0]] == undefined ||
+                this.matrix[newCoords[0]][newCoords[1]] == undefined ||
+                this.matrix[newCoords[0]][newCoords[1]] == 3 ||
+                !((this.matrix[newCoords[0]][newCoords[1]] & 3) == (this.matrix[x][y] & 3))
             ) {
                 continue;
             }
 
-            // TODO check for collisions
+            /**
+             * TODO check for collisions
+             * looks the easiest
+             * https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function
+             * potentially better explained
+             * https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+             */
 
             // add edge in both directions
             this.matrix[x][y] |= (2 ** i) << 4;
             let otherDirection = i & 1 ? (i + 3) % 8 : (i + 5) % 8;
-            this.matrix[potX][potY] |= (2 ** otherDirection) << 4;
+            this.matrix[newCoords[0]][newCoords[1]] |= (2 ** otherDirection) << 4;
             bridgeAdded = true;
         }
 
@@ -165,10 +164,10 @@ export class Graph {
     }
 }
 
-// gets a value between 0 and 7 and returns the corresponding x and y direction
-export function numberToXY(value: number): number[] {
-    let x = (value & 2 ? 1 : 2) * (value & 4 ? -1 : 1);
-    let y = (value & 2 ? 2 : 1) * (value & 1 ? -1 : 1);
+// gets a directionIndex between 0 and 7 and returns the corresponding x and y direction
+export function pointInDirectionOfIndex(x: number, y: number, directionIndex: number): number[] {
+    let newX = (directionIndex & 2 ? 1 : 2) * (directionIndex & 4 ? -1 : 1);
+    let newY = (directionIndex & 2 ? 2 : 1) * (directionIndex & 1 ? -1 : 1);
 
-    return [x, y];
+    return [x + newX, y + newY];
 }

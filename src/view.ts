@@ -1,4 +1,4 @@
-import { Graph, numberToXY } from "./graph";
+import { Graph, pointInDirectionOfIndex } from "./graph";
 
 class View {
     board: any;
@@ -7,31 +7,27 @@ class View {
     tileSize: number;
     corners: number[];
 
-    turnInfo: HTMLElement;
+    whosTurn: HTMLElement;
     boardContainer: HTMLElement;
 
     constructor() {
-        this.turnInfo = document.getElementById("turn-info");
+        this.whosTurn = document.getElementById("whos-turn");
         this.boardContainer = document.getElementById("board-container");
     }
 
     drawBoard(graph: Graph, gridlines: boolean, blockades: boolean): void {
-        // this line could be made shorter
-        this.turnInfo.innerHTML = "It's " + (graph.yellowsTurn ? "yellow" : "red") + "'s turn";
-        this.boardContainer.innerHTML = "";
-
         this._createCanvas(graph);
         if (gridlines) {
             this._drawGridlines();
         }
         this._drawFinishLines();
 
-        graph.matrix.forEach((column, indexX) => {
-            column.forEach((entry, indexY) => {
+        graph.matrix.forEach((column, x) => {
+            column.forEach((entry, y) => {
                 if (entry == 3) return;
 
-                let nodeCenterX = indexX * this.tileSize + this.tileSize / 2;
-                let nodeCenterY = indexY * this.tileSize + this.tileSize / 2;
+                let nodeCenterX = x * this.tileSize + this.tileSize / 2;
+                let nodeCenterY = y * this.tileSize + this.tileSize / 2;
 
                 // draw hole or pin
                 this.ctx.beginPath();
@@ -48,50 +44,18 @@ class View {
                 for (let i = 0; i < 8; i++) {
                     if (!((bridges & (2 ** i)) >> i)) continue;
 
-                    let direction = numberToXY(i);
-                    let connectedX = indexX + direction[0];
-                    let connectedY = indexY + direction[1];
+                    let connectedCoord = pointInDirectionOfIndex(x, y, i);
 
                     this.ctx.beginPath();
                     this.ctx.moveTo(nodeCenterX, nodeCenterY);
-                    this.ctx.lineTo(connectedX * this.tileSize + this.tileSize / 2, connectedY * this.tileSize + this.tileSize / 2);
+                    this.ctx.lineTo(connectedCoord[0] * this.tileSize + this.tileSize / 2, connectedCoord[1] * this.tileSize + this.tileSize / 2);
                     this.ctx.stroke();
                 }
             });
         });
 
-        /*
-        graph.nodeList.forEach((node) => {
-            let nodeCenterX = node.x * this.tileSize + this.tileSize / 2;
-            let nodeCenterY = node.y * this.tileSize + this.tileSize / 2;
-
-            // draw hole or pin
-            this.ctx.beginPath();
-            this.ctx.arc(nodeCenterX, nodeCenterY, this.tileSize / 6, 0, 2 * Math.PI);
-            this.ctx.fillStyle = this._numberToColor(node.state);
-            this.ctx.fill();
-
-            // draw bridges
-            this.ctx.lineWidth = this.tileSize / 12;
-            this.ctx.strokeStyle = this._numberToColor(node.state);
-            node.edges.forEach((edge) => {
-                this.ctx.beginPath();
-                this.ctx.moveTo(nodeCenterX, nodeCenterY);
-                this.ctx.lineTo(edge.x * this.tileSize + this.tileSize / 2, edge.y * this.tileSize + this.tileSize / 2);
-                this.ctx.stroke();
-            });
-
-            // draw blockade
-            if (!blockades) return;
-            this.ctx.strokeStyle = "black";
-            node.blockades.forEach((block) => {
-                this.ctx.beginPath();
-                this.ctx.moveTo(nodeCenterX, nodeCenterY);
-                this.ctx.lineTo(block.x * this.tileSize + this.tileSize / 2, block.y * this.tileSize + this.tileSize / 2);
-                this.ctx.stroke();
-            });
-        });
-        */
+        // this line could be made shorter
+        this.whosTurn.innerHTML = graph.yellowsTurn ? "yellow" : "red";
     }
 
     // this can probably be changed with clearRect instead of creating a whole new instance of the canvas
@@ -104,7 +68,7 @@ class View {
         this.board.style.margin = "1%";
         this.board.width = this.boardContainer.clientWidth * 0.98;
         this.board.height = this.boardContainer.clientHeight * 0.98;
-        // this.board.addEventListener("click", this.boardClicked);
+        this.boardContainer.innerHTML = "";
         this.boardContainer.appendChild(this.board);
 
         this.ctx = this.board.getContext("2d");
@@ -151,14 +115,14 @@ class View {
         this.ctx.stroke();
     }
 
-    private _numberToColor(state: number): string {
-        if (state == 0) {
+    private _numberToColor(value: number): string {
+        if (value == 0) {
             return "black";
         }
-        if (state & 1) {
+        if (value & 1) {
             return "yellow";
         }
-        if (state & 2) {
+        if (value & 2) {
             return "red";
         }
     }

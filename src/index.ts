@@ -7,6 +7,9 @@ import View from "./view";
 // TODO implement the gameWonModalShown to a point that it is usable again
 // clean up and organize code a lot
 // potentially move some functionality from model to controller/index
+
+var tilesAcrossDefault = 6;
+
 class Controller {
     model: Model;
     view: View;
@@ -34,8 +37,7 @@ class Controller {
     keepPlayingButton: HTMLElement;
 
     constructor() {
-        this.model = new Model();
-        console.log(this.model.mainGraph.matrix);
+        this.model = new Model(tilesAcrossDefault, true);
         this.view = new View();
         this.updateView();
 
@@ -71,19 +73,19 @@ class Controller {
             this.showBlockades = !this.showBlockades;
             this.updateView();
 
-            console.log(this.model.mainGraph.matrix);
+            console.table(transpose(this.model.mainGraph.matrix, 10));
         });
         this.startGameModalCloseButton.addEventListener("click", () => {
             this.startGameModal.style.display = "none";
         });
         this.yellowStartsButton.addEventListener("click", () => {
-            this.model.restartGame(true);
+            this.model = new Model(tilesAcrossDefault, true);
             this.updateView();
             this.startGameModal.style.display = "none";
             this.gameWonModalShown = false;
         });
         this.redStartsButton.addEventListener("click", () => {
-            this.model.restartGame(false);
+            this.model = new Model(tilesAcrossDefault, false);
             this.updateView();
             this.startGameModal.style.display = "none";
             this.gameWonModalShown = false;
@@ -128,3 +130,12 @@ class Controller {
 }
 
 const app = new Controller();
+
+// mostly for console.table() but also potentially for transposition
+function transpose(a: number[][], numeral: number) {
+    return Object.keys(a[0]).map(function (c: any) {
+        return a.map(function (r) {
+            return numeral == 10 ? r[c] : r[c].toString(numeral);
+        });
+    });
+}
