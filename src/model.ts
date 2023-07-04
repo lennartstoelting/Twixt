@@ -4,7 +4,7 @@ import { Graph } from "./graph";
 // global variables
 // -------------------------------------------------
 
-var tilesAcrossDefault = 6;
+var tilesAcrossDefault = 5;
 
 class Model {
     mainGraph: Graph;

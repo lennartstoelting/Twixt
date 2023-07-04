@@ -1,3 +1,4 @@
+import { mode } from "../webpack.config";
 import Model from "./model";
 import View from "./view";
 
@@ -34,6 +35,7 @@ class Controller {
 
     constructor() {
         this.model = new Model();
+        console.log(this.model.mainGraph.matrix);
         this.view = new View();
         this.updateView();
 
@@ -68,6 +70,8 @@ class Controller {
         this.toggleBlockadesButton.addEventListener("click", () => {
             this.showBlockades = !this.showBlockades;
             this.updateView();
+
+            console.log(this.model.mainGraph.matrix);
         });
         this.startGameModalCloseButton.addEventListener("click", () => {
             this.startGameModal.style.display = "none";
@@ -109,8 +113,7 @@ class Controller {
         // calculate which tile was clicked from global coordinates to matrix coordinates
         var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
         var y = Math.floor((event.clientY - rect.top) / this.view.tileSize);
-        // the corners of the playing field
-        if ((x == 0 || x == this.model.mainGraph.tilesAcross - 1) && (y == 0 || y == this.model.mainGraph.tilesAcross - 1)) return;
+
         // console.log("clicked hole: (x: " + x + ", y: " + y + ")");
         let nodePlayed = this.model.tryPlacingPin(x, y);
         if (nodePlayed) {

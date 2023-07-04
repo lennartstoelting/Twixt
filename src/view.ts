@@ -1,4 +1,4 @@
-import { Graph } from "./graph";
+import { Graph, numberToXY } from "./graph";
 
 class View {
     board: any;
@@ -26,6 +26,41 @@ class View {
         }
         this._drawFinishLines();
 
+        graph.matrix.forEach((column, indexX) => {
+            column.forEach((entry, indexY) => {
+                if (entry == 3) return;
+
+                let nodeCenterX = indexX * this.tileSize + this.tileSize / 2;
+                let nodeCenterY = indexY * this.tileSize + this.tileSize / 2;
+
+                // draw hole or pin
+                this.ctx.beginPath();
+                this.ctx.arc(nodeCenterX, nodeCenterY, this.tileSize / 6, 0, 2 * Math.PI);
+                this.ctx.fillStyle = this._numberToColor(entry);
+                this.ctx.fill();
+
+                // draw bridges
+                this.ctx.lineWidth = this.tileSize / 12;
+                this.ctx.strokeStyle = this._numberToColor(entry);
+                let bridges = entry >> 4;
+                if (bridges == 0) return;
+
+                for (let i = 0; i < 8; i++) {
+                    if (!((bridges & (2 ** i)) >> i)) continue;
+
+                    let direction = numberToXY(i);
+                    let connectedX = indexX + direction[0];
+                    let connectedY = indexY + direction[1];
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(nodeCenterX, nodeCenterY);
+                    this.ctx.lineTo(connectedX * this.tileSize + this.tileSize / 2, connectedY * this.tileSize + this.tileSize / 2);
+                    this.ctx.stroke();
+                }
+            });
+        });
+
+        /*
         graph.nodeList.forEach((node) => {
             let nodeCenterX = node.x * this.tileSize + this.tileSize / 2;
             let nodeCenterY = node.y * this.tileSize + this.tileSize / 2;
@@ -33,12 +68,12 @@ class View {
             // draw hole or pin
             this.ctx.beginPath();
             this.ctx.arc(nodeCenterX, nodeCenterY, this.tileSize / 6, 0, 2 * Math.PI);
-            this.ctx.fillStyle = this._stateToColor(node.state);
+            this.ctx.fillStyle = this._numberToColor(node.state);
             this.ctx.fill();
 
             // draw bridges
             this.ctx.lineWidth = this.tileSize / 12;
-            this.ctx.strokeStyle = this._stateToColor(node.state);
+            this.ctx.strokeStyle = this._numberToColor(node.state);
             node.edges.forEach((edge) => {
                 this.ctx.beginPath();
                 this.ctx.moveTo(nodeCenterX, nodeCenterY);
@@ -56,6 +91,7 @@ class View {
                 this.ctx.stroke();
             });
         });
+        */
     }
 
     // this can probably be changed with clearRect instead of creating a whole new instance of the canvas
@@ -115,14 +151,14 @@ class View {
         this.ctx.stroke();
     }
 
-    private _stateToColor(state: number): string {
+    private _numberToColor(state: number): string {
         if (state == 0) {
             return "black";
         }
-        if (state == 1) {
+        if (state & 1) {
             return "yellow";
         }
-        if ((state = 2)) {
+        if (state & 2) {
             return "red";
         }
     }

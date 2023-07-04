@@ -25,16 +25,25 @@ export class Graph {
     gameWon: number;
     evaluation: number;
 
+    matrix: number[][];
+
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.nodeList = [];
         this.yellowsTurn = yellowsTurn;
         this.tilesAcross = tilesAcross;
         this.gameWon = 0;
+        this.matrix = Array(tilesAcross)
+            .fill(0)
+            .map(() => Array(tilesAcross).fill(0));
 
         // create all nodes in empty state
         for (let y = 0; y < tilesAcross; y++) {
             for (let x = 0; x < tilesAcross; x++) {
-                if ((x == 0 || x == tilesAcross - 1) && (y == 0 || y == tilesAcross - 1)) continue; // the corners of the playing field
+                if ((x == 0 || x == tilesAcross - 1) && (y == 0 || y == tilesAcross - 1)) {
+                    // the corners of the playing field
+                    this.matrix[x][y] = 3;
+                    continue;
+                }
                 this.nodeList.push(new Node(x, y, tilesAcross, 0));
             }
         }
@@ -43,39 +52,39 @@ export class Graph {
     clone(): Graph {
         let clonedGraph = new Graph(this.tilesAcross, this.yellowsTurn);
         clonedGraph.nodeList = structuredClone(this.nodeList);
+        clonedGraph.matrix = structuredClone(this.matrix);
         return clonedGraph;
     }
 
-    getNode(x: number, y: number): Node {
-        return this.nodeList.find((node) => {
-            return node.x == x && node.y == y;
-        });
-    }
-
     tryAddingNode(x: number, y: number): boolean {
-        let node = this.getNode(x, y);
+        if (this.matrix[x][y] != 0) return false;
+        this.matrix[x][y] = this.yellowsTurn ? 1 : 2;
 
-        if (node.state != 0) return false;
-
-        node.state = this.yellowsTurn ? 1 : 2;
-
+        // connect bridges
         let bridgeAdded: boolean = false;
         for (let i = 0; i < 8; i++) {
-            // calculate x and y of all 8 potential (knight)moves
-            let iInBinary = ("000" + i.toString(2)).slice(-3);
-            let potentialX = node.x + (iInBinary[0] == "0" ? 1 : 2) * (iInBinary[1] == "0" ? -1 : 1);
-            let potentialY = node.y + (iInBinary[0] == "0" ? 2 : 1) * (iInBinary[2] == "0" ? 1 : -1);
+            let newCoord = numberToXY(i);
 
-            // potentialNode is one out of the 8 surrounding neighbours that might have the same color and could be connected
-            let potentialNode = this.getNode(potentialX, potentialY);
-            if (!potentialNode) continue;
-            if (potentialNode.state != node.state) continue;
+            let potX = x + newCoord[0];
+            let potY = y + newCoord[1];
 
-            let edgeAdded = this.addEdge(node, potentialNode);
-            if (!edgeAdded) {
-                console.log("Edge to potential Node (" + potentialNode.x + ", " + potentialNode.y + ") couldn't be added");
+            // if outside or a corner or not the same color
+            // TODO rework this later on!!
+            if (
+                this.matrix[potX] == undefined ||
+                this.matrix[potX][potY] == undefined ||
+                this.matrix[potX][potY] == 3 ||
+                !((this.matrix[potX][potY] & 3) == (this.matrix[x][y] & 3))
+            ) {
                 continue;
             }
+
+            // TODO check for collisions
+
+            // add edge in both directions
+            this.matrix[x][y] |= (2 ** i) << 4;
+            let otherDirection = i & 1 ? (i + 3) % 8 : (i + 5) % 8;
+            this.matrix[potX][potY] |= (2 ** otherDirection) << 4;
             bridgeAdded = true;
         }
 
@@ -89,27 +98,28 @@ export class Graph {
 
     // only adds an Edge if the connections isn't blocked
     // TODO add a check that ensures the edge that is being added is exactly one knight move away to prevent future bugs
-    addEdge(node: Node, potentialNode: Node): boolean {
-        let xDirectionPositive = potentialNode.x - node.x > 0;
-        let yDirectionPositive = potentialNode.y - node.y > 0;
+    /*
+    addEdge(node: Node, potNode: Node): boolean {
+        let xDirectionPositive = potNode.x - node.x > 0;
+        let yDirectionPositive = potNode.y - node.y > 0;
 
         /*
          *   vdownv       ^up^
          *
-         *   node    potentialNode2
-         *   node1   potentialNode1
-         *   node2   potentialNode
+         *   node    potNode2
+         *   node1   potNode1
+         *   node2   potNode
          *
          *   applicable in other rotations
-         */
-        let node1 = this.getNode(potentialNode.x + (xDirectionPositive ? -1 : 1), potentialNode.y + (yDirectionPositive ? -1 : 1));
-        let potentialNode1 = this.getNode(node.x + (xDirectionPositive ? 1 : -1), node.y + (yDirectionPositive ? 1 : -1));
+         *
+        let node1 = this.getNode(potNode.x + (xDirectionPositive ? -1 : 1), potNode.y + (yDirectionPositive ? -1 : 1));
+        let potNode1 = this.getNode(node.x + (xDirectionPositive ? 1 : -1), node.y + (yDirectionPositive ? 1 : -1));
 
         let node2 = this.getNode(node1.x * 2 - node.x, node1.y * 2 - node.y);
-        let potentialNode2 = this.getNode(potentialNode1.x * 2 - potentialNode.x, potentialNode1.y * 2 - potentialNode.y);
+        let potNode2 = this.getNode(potNode1.x * 2 - potNode.x, potNode1.y * 2 - potNode.y);
 
         // check for collisions
-        if (node1.blockades.has(potentialNode2) || potentialNode1.blockades.has(node2) || node1.blockades.has(potentialNode1)) {
+        if (node1.blockades.has(potNode2) || potNode1.blockades.has(node2) || node1.blockades.has(potNode1)) {
             return false;
         }
 
@@ -118,37 +128,47 @@ export class Graph {
             nodeB.blockades.add(nodeA);
         };
         addBlockade(node, node1);
-        addBlockade(node1, potentialNode);
-        addBlockade(potentialNode, potentialNode1);
-        addBlockade(potentialNode1, node);
+        addBlockade(node1, potNode);
+        addBlockade(potNode, potNode1);
+        addBlockade(potNode1, node);
 
         // add bridge both ways
-        node.edges.push(potentialNode);
-        potentialNode.edges.push(node);
+        node.edges.push(potNode);
+        potNode.edges.push(node);
         return true;
     }
+    */
 
     checkWinCondition(): void {
-        let nodeQueue = new Set<Node>();
-        for (let i = 1; i < this.tilesAcross - 1; i++) {
-            let startNode = this.yellowsTurn ? this.getNode(i, 0) : this.getNode(0, i);
-            if ((this.yellowsTurn && startNode.state != 1) || (!this.yellowsTurn && startNode.state != 2)) continue;
-            nodeQueue.add(startNode);
-        }
+        console.log("checking win condition...");
+        // let nodeQueue = new Set<Node>();
+        // for (let i = 1; i < this.tilesAcross - 1; i++) {
+        //     let startNode = this.yellowsTurn ? this.getNode(i, 0) : this.getNode(0, i);
+        //     if ((this.yellowsTurn && startNode.state != 1) || (!this.yellowsTurn && startNode.state != 2)) continue;
+        //     nodeQueue.add(startNode);
+        // }
 
-        let connectionFound: boolean = false;
-        nodeQueue.forEach((node) => {
-            if (connectionFound) return;
-            if ((this.yellowsTurn && node.y == this.tilesAcross - 1) || (!this.yellowsTurn && node.x == this.tilesAcross - 1)) {
-                connectionFound = true;
-                return;
-            }
-            node.edges.forEach((node) => {
-                nodeQueue.add(node);
-            });
-        });
-        if (connectionFound) {
-            this.gameWon = this.yellowsTurn ? 1 : 2;
-        }
+        // let connectionFound: boolean = false;
+        // nodeQueue.forEach((node) => {
+        //     if (connectionFound) return;
+        //     if ((this.yellowsTurn && node.y == this.tilesAcross - 1) || (!this.yellowsTurn && node.x == this.tilesAcross - 1)) {
+        //         connectionFound = true;
+        //         return;
+        //     }
+        //     node.edges.forEach((node) => {
+        //         nodeQueue.add(node);
+        //     });
+        // });
+        // if (connectionFound) {
+        //     this.gameWon = this.yellowsTurn ? 1 : 2;
+        // }
     }
+}
+
+// gets a value between 0 and 7 and returns the corresponding x and y direction
+export function numberToXY(value: number): number[] {
+    let x = (value & 2 ? 1 : 2) * (value & 4 ? -1 : 1);
+    let y = (value & 2 ? 2 : 1) * (value & 1 ? -1 : 1);
+
+    return [x, y];
 }
