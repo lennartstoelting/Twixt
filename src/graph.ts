@@ -1,18 +1,12 @@
-export enum State {
-    empty = "black",
-    yellow = "Yellow",
-    red = "Red",
-}
-
 export class Node {
     x: number;
     y: number;
-    state: State;
+    state: number;
     edges: Node[];
     blockades: Set<Node>;
     id: number;
 
-    constructor(x: number, y: number, tilesAcross: number, state: State) {
+    constructor(x: number, y: number, tilesAcross: number, state: number) {
         this.x = x;
         this.y = y;
         this.state = state;
@@ -28,25 +22,25 @@ export class Graph {
     yellowsTurn: boolean;
     tilesAcross: number;
     nodeList: Node[];
-    gameWon: State;
+    gameWon: number;
     evaluation: number;
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.nodeList = [];
         this.yellowsTurn = yellowsTurn;
         this.tilesAcross = tilesAcross;
-        this.gameWon = State.empty;
+        this.gameWon = 0;
 
         // create all nodes in empty state
         for (let y = 0; y < tilesAcross; y++) {
             for (let x = 0; x < tilesAcross; x++) {
                 if ((x == 0 || x == tilesAcross - 1) && (y == 0 || y == tilesAcross - 1)) continue; // the corners of the playing field
-                this.nodeList.push(new Node(x, y, tilesAcross, State.empty));
+                this.nodeList.push(new Node(x, y, tilesAcross, 0));
             }
         }
     }
 
-    clone() {
+    clone(): Graph {
         let clonedGraph = new Graph(this.tilesAcross, this.yellowsTurn);
         clonedGraph.nodeList = structuredClone(this.nodeList);
         return clonedGraph;
@@ -58,12 +52,12 @@ export class Graph {
         });
     }
 
-    tryAddingNode(x: number, y: number) {
+    tryAddingNode(x: number, y: number): boolean {
         let node = this.getNode(x, y);
 
-        if (node.state != State.empty) return false;
+        if (node.state != 0) return false;
 
-        node.state = this.yellowsTurn ? State.yellow : State.red;
+        node.state = this.yellowsTurn ? 1 : 2;
 
         let bridgeAdded: boolean = false;
         for (let i = 0; i < 8; i++) {
@@ -95,7 +89,7 @@ export class Graph {
 
     // only adds an Edge if the connections isn't blocked
     // TODO add a check that ensures the edge that is being added is exactly one knight move away to prevent future bugs
-    addEdge(node: Node, potentialNode: Node) {
+    addEdge(node: Node, potentialNode: Node): boolean {
         let xDirectionPositive = potentialNode.x - node.x > 0;
         let yDirectionPositive = potentialNode.y - node.y > 0;
 
@@ -134,11 +128,11 @@ export class Graph {
         return true;
     }
 
-    checkWinCondition() {
+    checkWinCondition(): void {
         let nodeQueue = new Set<Node>();
         for (let i = 1; i < this.tilesAcross - 1; i++) {
             let startNode = this.yellowsTurn ? this.getNode(i, 0) : this.getNode(0, i);
-            if ((this.yellowsTurn && startNode.state != State.yellow) || (!this.yellowsTurn && startNode.state != State.red)) continue;
+            if ((this.yellowsTurn && startNode.state != 1) || (!this.yellowsTurn && startNode.state != 2)) continue;
             nodeQueue.add(startNode);
         }
 
@@ -154,7 +148,7 @@ export class Graph {
             });
         });
         if (connectionFound) {
-            this.gameWon = this.yellowsTurn ? State.yellow : State.red;
+            this.gameWon = this.yellowsTurn ? 1 : 2;
         }
     }
 }

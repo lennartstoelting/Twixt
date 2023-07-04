@@ -1,4 +1,3 @@
-import { State } from "./graph";
 import Model from "./model";
 import View from "./view";
 
@@ -100,12 +99,12 @@ class Controller {
         });
     }
 
-    updateView() {
+    updateView(): void {
         this.view.drawBoard(this.model.mainGraph, this.showGridlines, this.showBlockades);
         this.view.board.addEventListener("click", () => this.boardClicked(event));
     }
 
-    boardClicked(event: any) {
+    boardClicked(event: any): void {
         let rect = this.view.board.getBoundingClientRect();
         // calculate which tile was clicked from global coordinates to matrix coordinates
         var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
@@ -117,7 +116,7 @@ class Controller {
         if (nodePlayed) {
             this.updateView();
         }
-        if (this.model.mainGraph.gameWon != State.empty && !this.gameWonModalShown) {
+        if (this.model.mainGraph.gameWon != 0 && !this.gameWonModalShown) {
             this.winnerInfo.innerHTML = this.model.mainGraph.gameWon + " won!";
             this.gameWonModal.style.display = "block";
             this.gameWonModalShown = true;

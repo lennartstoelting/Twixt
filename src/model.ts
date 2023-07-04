@@ -16,12 +16,12 @@ class Model {
     }
 
     // these things might need to move
-    restartGame(yellowStarts: boolean) {
+    restartGame(yellowStarts: boolean): void {
         this.mainGraph = new Graph(tilesAcrossDefault, yellowStarts);
         this.history = [];
     }
 
-    tryPlacingPin(x: number, y: number) {
+    tryPlacingPin(x: number, y: number): boolean {
         let currGraph = this.mainGraph.clone();
         let pinPlaced = this.mainGraph.tryAddingNode(x, y);
         if (!pinPlaced) return false;
@@ -29,7 +29,7 @@ class Model {
         return true;
     }
 
-    undoMove() {
+    undoMove(): boolean {
         if (this.history.length == 0) {
             return false;
         }

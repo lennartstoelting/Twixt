@@ -15,7 +15,7 @@ class View {
         this.boardContainer = document.getElementById("board-container");
     }
 
-    drawBoard(graph: Graph, gridlines: boolean, blockades: boolean) {
+    drawBoard(graph: Graph, gridlines: boolean, blockades: boolean): void {
         // this line could be made shorter
         this.turnInfo.innerHTML = "It's " + (graph.yellowsTurn ? "yellow" : "red") + "'s turn";
         this.boardContainer.innerHTML = "";
@@ -33,12 +33,12 @@ class View {
             // draw hole or pin
             this.ctx.beginPath();
             this.ctx.arc(nodeCenterX, nodeCenterY, this.tileSize / 6, 0, 2 * Math.PI);
-            this.ctx.fillStyle = node.state;
+            this.ctx.fillStyle = this._stateToColor(node.state);
             this.ctx.fill();
 
             // draw bridges
             this.ctx.lineWidth = this.tileSize / 12;
-            this.ctx.strokeStyle = node.state;
+            this.ctx.strokeStyle = this._stateToColor(node.state);
             node.edges.forEach((edge) => {
                 this.ctx.beginPath();
                 this.ctx.moveTo(nodeCenterX, nodeCenterY);
@@ -59,7 +59,7 @@ class View {
     }
 
     // this can probably be changed with clearRect instead of creating a whole new instance of the canvas
-    _createCanvas(graph: Graph) {
+    private _createCanvas(graph: Graph): void {
         this.board = document.createElement("canvas");
         this.board.id = "board";
         this.board.style.background = "blue";
@@ -76,7 +76,7 @@ class View {
         this.tileSize = this.boardSideLength / graph.tilesAcross;
     }
 
-    _drawGridlines() {
+    private _drawGridlines(): void {
         this.ctx.beginPath();
         for (let l = 0; l <= this.boardSideLength; l += this.tileSize) {
             this.ctx.moveTo(l, 0);
@@ -89,7 +89,7 @@ class View {
         this.ctx.stroke();
     }
 
-    _drawFinishLines() {
+    private _drawFinishLines(): void {
         this.corners = [
             this.tileSize,
             this.tileSize + this.tileSize / 4,
@@ -113,6 +113,18 @@ class View {
         this.ctx.moveTo(this.corners[1], this.corners[2]);
         this.ctx.lineTo(this.corners[3], this.corners[2]);
         this.ctx.stroke();
+    }
+
+    private _stateToColor(state: number): string {
+        if (state == 0) {
+            return "black";
+        }
+        if (state == 1) {
+            return "yellow";
+        }
+        if ((state = 2)) {
+            return "red";
+        }
     }
 }
 
