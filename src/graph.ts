@@ -60,14 +60,14 @@ export class Graph {
         // connect bridges
         let bridgeAdded: boolean = false;
         for (let i = 0; i < 8; i++) {
-            let newCoords = pointInDirectionOfIndex(x, y, i);
+            let next = pointInDirectionOfIndex(x, y, i);
 
             // if outside or a corner or not the same color
             if (
-                this.matrix[newCoords[0]] == undefined ||
-                this.matrix[newCoords[0]][newCoords[1]] == undefined ||
-                this.matrix[newCoords[0]][newCoords[1]] == 3 ||
-                !((this.matrix[newCoords[0]][newCoords[1]] & 3) == (this.matrix[x][y] & 3))
+                this.matrix[next.x] == undefined ||
+                this.matrix[next.x][next.y] == undefined ||
+                this.matrix[next.x][next.y] == 3 ||
+                !((this.matrix[next.x][next.y] & 3) == (this.matrix[x][y] & 3))
             ) {
                 continue;
             }
@@ -80,10 +80,29 @@ export class Graph {
              * https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
              */
 
+            for (let i = Math.min(y, next.y); i <= Math.max(y, next.y); i++) {
+                for (let j = Math.min(x, next.x); j <= Math.max(x, next.x); j++) {
+                    // skip when it's one of the original connecting nodes
+                    if ((j == x && i == y) || (j == next.x && i == next.y)) continue;
+
+                    let bridges = this.matrix[j][i] >> 2;
+                    if (!bridges) continue;
+                    console.log(`checking for intersections at: ${[j, i]}`);
+
+                    for (let k = 0; k < 8; k++) {
+                        if (!(bridges & (2 ** k))) continue;
+
+                        let connectedCoord = pointInDirectionOfIndex(j, i, k);
+                        let intersection = intersects(x, y, next.x, next.y, j, i, connectedCoord.x, connectedCoord.y);
+                        if (intersection) console.log(`${[j, i]} is blocking this connection`);
+                    }
+                }
+            }
+
             // add edge in both directions
-            this.matrix[x][y] |= (2 ** i) << 4;
+            this.matrix[x][y] |= (2 ** i) << 2;
             let otherDirection = i & 1 ? (i + 3) % 8 : (i + 5) % 8;
-            this.matrix[newCoords[0]][newCoords[1]] |= (2 ** otherDirection) << 4;
+            this.matrix[next.x][next.y] |= (2 ** otherDirection) << 2;
             bridgeAdded = true;
         }
 
@@ -165,9 +184,21 @@ export class Graph {
 }
 
 // gets a directionIndex between 0 and 7 and returns the corresponding x and y direction
-export function pointInDirectionOfIndex(x: number, y: number, directionIndex: number): number[] {
+export function pointInDirectionOfIndex(x: number, y: number, directionIndex: number) {
     let newX = (directionIndex & 2 ? 1 : 2) * (directionIndex & 4 ? -1 : 1);
     let newY = (directionIndex & 2 ? 2 : 1) * (directionIndex & 1 ? -1 : 1);
 
-    return [x + newX, y + newY];
+    return { x: x + newX, y: y + newY };
+}
+
+function intersects(a: number, b: number, c: number, d: number, p: number, q: number, r: number, s: number) {
+    var det, gamma, lambda;
+    det = (c - a) * (s - q) - (r - p) * (d - b);
+    if (det === 0) {
+        return false;
+    } else {
+        lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
+        gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
+        return 0 < lambda && lambda < 1 && 0 < gamma && gamma < 1;
+    }
 }

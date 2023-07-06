@@ -38,17 +38,17 @@ class View {
                 // draw bridges
                 this.ctx.lineWidth = this.tileSize / 12;
                 this.ctx.strokeStyle = this._numberToColor(entry);
-                let bridges = entry >> 4;
-                if (bridges == 0) return;
+                let bridges = entry >> 2;
+                if (!bridges) return;
 
                 for (let i = 0; i < 8; i++) {
-                    if (!((bridges & (2 ** i)) >> i)) continue;
+                    if (!(bridges & (2 ** i))) continue;
 
                     let connectedCoord = pointInDirectionOfIndex(x, y, i);
 
                     this.ctx.beginPath();
                     this.ctx.moveTo(nodeCenterX, nodeCenterY);
-                    this.ctx.lineTo(connectedCoord[0] * this.tileSize + this.tileSize / 2, connectedCoord[1] * this.tileSize + this.tileSize / 2);
+                    this.ctx.lineTo(connectedCoord.x * this.tileSize + this.tileSize / 2, connectedCoord.y * this.tileSize + this.tileSize / 2);
                     this.ctx.stroke();
                 }
             });

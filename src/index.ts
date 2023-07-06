@@ -1,12 +1,7 @@
-import { mode } from "../webpack.config";
 import Model from "./model";
 import View from "./view";
 
 /** handles all input, checks in with model and displays the result with view */
-
-// TODO implement the gameWonModalShown to a point that it is usable again
-// clean up and organize code a lot
-// potentially move some functionality from model to controller/index
 
 var tilesAcrossDefault = 6;
 
