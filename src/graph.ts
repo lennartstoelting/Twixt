@@ -24,8 +24,6 @@
  */
 
 export class Graph {
-    tilesAcross: number;
-
     yellowsTurn: boolean;
     gameWon: number;
     evaluation: number;
@@ -34,7 +32,6 @@ export class Graph {
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.yellowsTurn = yellowsTurn;
-        this.tilesAcross = tilesAcross;
         this.gameWon = 0;
         this.matrix = Array(tilesAcross)
             .fill(0)
@@ -48,61 +45,41 @@ export class Graph {
     }
 
     clone(): Graph {
-        let clonedGraph = new Graph(this.tilesAcross, this.yellowsTurn);
+        let clonedGraph = new Graph(this.matrix.length, this.yellowsTurn);
         clonedGraph.matrix = structuredClone(this.matrix);
         return clonedGraph;
     }
 
-    tryAddingNode(x: number, y: number): boolean {
-        if (this.matrix[x][y] != 0) return false;
-        this.matrix[x][y] = this.yellowsTurn ? 1 : 2;
+    /**
+     * adding nodes and checking for intersections follows the pattern
+     * nodeA.x, nodeA.y = coords of the original node to be added
+     *
+     */
+    addNode(nodeA: any): boolean {
+        // if it's an empty hole, place a pin
+        if (this.matrix[nodeA.x][nodeA.y] != 0) return false;
+        this.matrix[nodeA.x][nodeA.y] = this.yellowsTurn ? 1 : 2;
 
-        // connect bridges
-        let bridgeAdded: boolean = false;
-        for (let i = 0; i < 8; i++) {
-            let next = pointInDirectionOfIndex(x, y, i);
+        // now check for bridges in all directions
+        let bridgeAdded: boolean = false; // to know if the win condition needs to be cheked
+        for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+            let nodeB = pointInDirectionOfIndex(nodeA.x, nodeA.y, directionIndex);
 
             // if outside or a corner or not the same color
             if (
-                this.matrix[next.x] == undefined ||
-                this.matrix[next.x][next.y] == undefined ||
-                this.matrix[next.x][next.y] == 3 ||
-                !((this.matrix[next.x][next.y] & 3) == (this.matrix[x][y] & 3))
+                this.matrix[nodeB.x] == undefined ||
+                this.matrix[nodeB.x][nodeB.y] == undefined ||
+                this.matrix[nodeB.x][nodeB.y] == 3 ||
+                !((this.matrix[nodeB.x][nodeB.y] & 3) == (this.matrix[nodeA.x][nodeA.y] & 3))
             ) {
                 continue;
             }
 
-            /**
-             * TODO check for collisions
-             * looks the easiest
-             * https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function
-             * potentially better explained
-             * https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
-             */
-
-            for (let i = Math.min(y, next.y); i <= Math.max(y, next.y); i++) {
-                for (let j = Math.min(x, next.x); j <= Math.max(x, next.x); j++) {
-                    // skip when it's one of the original connecting nodes
-                    if ((j == x && i == y) || (j == next.x && i == next.y)) continue;
-
-                    let bridges = this.matrix[j][i] >> 2;
-                    if (!bridges) continue;
-                    console.log(`checking for intersections at: ${[j, i]}`);
-
-                    for (let k = 0; k < 8; k++) {
-                        if (!(bridges & (2 ** k))) continue;
-
-                        let connectedCoord = pointInDirectionOfIndex(j, i, k);
-                        let intersection = intersects(x, y, next.x, next.y, j, i, connectedCoord.x, connectedCoord.y);
-                        if (intersection) console.log(`${[j, i]} is blocking this connection`);
-                    }
-                }
-            }
-
+            if (this.checkForBlockades(nodeA, nodeB)) continue;
             // add edge in both directions
-            this.matrix[x][y] |= (2 ** i) << 2;
-            let otherDirection = i & 1 ? (i + 3) % 8 : (i + 5) % 8;
-            this.matrix[next.x][next.y] |= (2 ** otherDirection) << 2;
+            this.matrix[nodeA.x][nodeA.y] |= (2 ** directionIndex) << 2;
+            let otherDirection = directionIndex & 1 ? (directionIndex + 3) % 8 : (directionIndex + 5) % 8;
+            this.matrix[nodeB.x][nodeB.y] |= (2 ** otherDirection) << 2;
             bridgeAdded = true;
         }
 
@@ -114,48 +91,36 @@ export class Graph {
         return true;
     }
 
-    // only adds an Edge if the connections isn't blocked
-    // TODO add a check that ensures the edge that is being added is exactly one knight move away to prevent future bugs
-    /*
-    addEdge(node: Node, potNode: Node): boolean {
-        let xDirectionPositive = potNode.x - node.x > 0;
-        let yDirectionPositive = potNode.y - node.y > 0;
+    checkForBlockades(nodeA: any, nodeB: any): boolean {
+        // establish the bounding rectangle that contains the bridge connection
+        let topLeftX = Math.min(nodeA.x, nodeB.x);
+        let topLeftY = Math.min(nodeA.y, nodeB.y);
+        let bottomRightX = Math.max(nodeA.x, nodeB.x);
+        let bottomRightY = Math.max(nodeA.y, nodeB.y);
 
-        /*
-         *   vdownv       ^up^
-         *
-         *   node    potNode2
-         *   node1   potNode1
-         *   node2   potNode
-         *
-         *   applicable in other rotations
-         *
-        let node1 = this.getNode(potNode.x + (xDirectionPositive ? -1 : 1), potNode.y + (yDirectionPositive ? -1 : 1));
-        let potNode1 = this.getNode(node.x + (xDirectionPositive ? 1 : -1), node.y + (yDirectionPositive ? 1 : -1));
+        // go over the 6 nodes in the rectangle, skipping the ones the original bridge is connecting
+        for (let rectY = topLeftY; rectY <= bottomRightY; rectY++) {
+            for (let rectX = topLeftX; rectX <= bottomRightX; rectX++) {
+                if ((rectX == nodeA.x && rectY == nodeA.y) || (rectX == nodeB.x && rectY == nodeB.y)) continue;
 
-        let node2 = this.getNode(node1.x * 2 - node.x, node1.y * 2 - node.y);
-        let potNode2 = this.getNode(potNode1.x * 2 - potNode.x, potNode1.y * 2 - potNode.y);
+                // only check the nodes that have bridges
+                let bridges = this.matrix[rectX][rectY] >> 2;
+                if (!bridges) continue;
 
-        // check for collisions
-        if (node1.blockades.has(potNode2) || potNode1.blockades.has(node2) || node1.blockades.has(potNode1)) {
-            return false;
+                // go over each bridge and check for intersection with the original one
+                for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+                    if (!(bridges & (2 ** directionIndex))) continue;
+
+                    let outsideRect = pointInDirectionOfIndex(rectX, rectY, directionIndex);
+                    if (intersects(nodeA.x, nodeA.y, nodeB.x, nodeB.y, rectX, rectY, outsideRect.x, outsideRect.y)) {
+                        return true;
+                    }
+                }
+            }
         }
 
-        const addBlockade = (nodeA: Node, nodeB: Node) => {
-            nodeA.blockades.add(nodeB);
-            nodeB.blockades.add(nodeA);
-        };
-        addBlockade(node, node1);
-        addBlockade(node1, potNode);
-        addBlockade(potNode, potNode1);
-        addBlockade(potNode1, node);
-
-        // add bridge both ways
-        node.edges.push(potNode);
-        potNode.edges.push(node);
-        return true;
+        return false;
     }
-    */
 
     checkWinCondition(): void {
         console.log("checking win condition...");
@@ -191,6 +156,9 @@ export function pointInDirectionOfIndex(x: number, y: number, directionIndex: nu
     return { x: x + newX, y: y + newY };
 }
 
+/**
+ * https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function
+ */
 function intersects(a: number, b: number, c: number, d: number, p: number, q: number, r: number, s: number) {
     var det, gamma, lambda;
     det = (c - a) * (s - q) - (r - p) * (d - b);

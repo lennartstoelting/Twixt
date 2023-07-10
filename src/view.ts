@@ -73,7 +73,7 @@ class View {
 
         this.ctx = this.board.getContext("2d");
         this.boardSideLength = this.board.clientWidth;
-        this.tileSize = this.boardSideLength / graph.tilesAcross;
+        this.tileSize = this.boardSideLength / graph.matrix.length;
     }
 
     private _drawGridlines(): void {

@@ -15,7 +15,7 @@ class Model {
 
     tryPlacingPin(x: number, y: number): boolean {
         let currGraph = this.mainGraph.clone();
-        let pinPlaced = this.mainGraph.tryAddingNode(x, y);
+        let pinPlaced = this.mainGraph.addNode({ x: x, y: y });
         if (!pinPlaced) return false;
         this.history.push(currGraph);
         return true;
