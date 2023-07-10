@@ -53,8 +53,7 @@ export class Graph {
     }
 
     /**
-     * TODO
-     * implement taking the original graph and turning it into a bitboard where the first two bits represent yellow and red and the following 8 represent the bridges
+     * turn graph it into a bitboard where the first two bits represent yellow and red and the following 8 represent the bridges
      */
     graphToBitboard() {
         let matrix = Array(this.tilesAcross)
@@ -124,8 +123,6 @@ export class Graph {
         return true;
     }
 
-    // only adds an Edge if the connections isn't blocked
-    // TODO add a check that ensures the edge that is being added is exactly one knight move away to prevent future bugs
     addEdge(node: Node, potentialNode: Node): boolean {
         let xDirectionPositive = potentialNode.x - node.x > 0;
         let yDirectionPositive = potentialNode.y - node.y > 0;
