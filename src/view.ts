@@ -15,7 +15,7 @@ class View {
         this.boardContainer = document.getElementById("board-container");
     }
 
-    drawBoard(graph: Graph, gridlines: boolean, blockades: boolean) {
+    drawBoard(graph: Graph, gridlines: boolean, blockades: boolean): void {
         // this line could be made shorter
         this.turnInfo.innerHTML = "It's " + (graph.yellowsTurn ? "yellow" : "red") + "'s turn";
         this.boardContainer.innerHTML = "";
@@ -59,7 +59,7 @@ class View {
     }
 
     // this can probably be changed with clearRect instead of creating a whole new instance of the canvas
-    _createCanvas(graph: Graph) {
+    _createCanvas(graph: Graph): void {
         this.board = document.createElement("canvas");
         this.board.id = "board";
         this.board.style.background = "blue";
@@ -76,7 +76,7 @@ class View {
         this.tileSize = this.boardSideLength / graph.tilesAcross;
     }
 
-    _drawGridlines() {
+    _drawGridlines(): void {
         this.ctx.beginPath();
         for (let l = 0; l <= this.boardSideLength; l += this.tileSize) {
             this.ctx.moveTo(l, 0);
@@ -89,7 +89,7 @@ class View {
         this.ctx.stroke();
     }
 
-    _drawFinishLines() {
+    _drawFinishLines(): void {
         this.corners = [
             this.tileSize,
             this.tileSize + this.tileSize / 4,

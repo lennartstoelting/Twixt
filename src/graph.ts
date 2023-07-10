@@ -46,7 +46,7 @@ export class Graph {
         }
     }
 
-    clone() {
+    clone(): Graph {
         let clonedGraph = new Graph(this.tilesAcross, this.yellowsTurn);
         clonedGraph.nodeList = structuredClone(this.nodeList);
         return clonedGraph;
@@ -58,7 +58,7 @@ export class Graph {
         });
     }
 
-    tryAddingNode(x: number, y: number) {
+    tryAddingNode(x: number, y: number): boolean {
         let node = this.getNode(x, y);
 
         if (node.state != State.empty) return false;
@@ -95,7 +95,7 @@ export class Graph {
 
     // only adds an Edge if the connections isn't blocked
     // TODO add a check that ensures the edge that is being added is exactly one knight move away to prevent future bugs
-    addEdge(node: Node, potentialNode: Node) {
+    addEdge(node: Node, potentialNode: Node): boolean {
         let xDirectionPositive = potentialNode.x - node.x > 0;
         let yDirectionPositive = potentialNode.y - node.y > 0;
 
@@ -134,7 +134,7 @@ export class Graph {
         return true;
     }
 
-    checkWinCondition() {
+    checkWinCondition(): void {
         let nodeQueue = new Set<Node>();
         for (let i = 1; i < this.tilesAcross - 1; i++) {
             let startNode = this.yellowsTurn ? this.getNode(i, 0) : this.getNode(0, i);

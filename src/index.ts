@@ -100,12 +100,12 @@ class Controller {
         });
     }
 
-    updateView() {
+    updateView(): void {
         this.view.drawBoard(this.model.mainGraph, this.showGridlines, this.showBlockades);
         this.view.board.addEventListener("click", () => this.boardClicked(event));
     }
 
-    boardClicked(event: any) {
+    boardClicked(event: any): void {
         let rect = this.view.board.getBoundingClientRect();
         // calculate which tile was clicked from global coordinates to matrix coordinates
         var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
