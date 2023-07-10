@@ -4,6 +4,8 @@ import View from "./view";
 
 /** handles all input, checks in with model and displays the result with view */
 
+var tilesAcrossDefault = 6;
+
 // TODO implement the gameWonModalShown to a point that it is usable again
 // clean up and organize code a lot
 // potentially move some functionality from model to controller/index
@@ -34,7 +36,7 @@ class Controller {
     keepPlayingButton: HTMLElement;
 
     constructor() {
-        this.model = new Model();
+        this.model = new Model(tilesAcrossDefault, true);
         this.view = new View();
         this.updateView();
 
@@ -74,13 +76,13 @@ class Controller {
             this.startGameModal.style.display = "none";
         });
         this.yellowStartsButton.addEventListener("click", () => {
-            this.model.restartGame(true);
+            this.model = new Model(tilesAcrossDefault, true);
             this.updateView();
             this.startGameModal.style.display = "none";
             this.gameWonModalShown = false;
         });
         this.redStartsButton.addEventListener("click", () => {
-            this.model.restartGame(false);
+            this.model = new Model(tilesAcrossDefault, false);
             this.updateView();
             this.startGameModal.style.display = "none";
             this.gameWonModalShown = false;

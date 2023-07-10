@@ -4,20 +4,12 @@ import { Graph } from "./graph";
 // global variables
 // -------------------------------------------------
 
-var tilesAcrossDefault = 6;
-
 class Model {
     mainGraph: Graph;
     history: Graph[];
 
-    constructor() {
-        this.mainGraph = new Graph(tilesAcrossDefault, true);
-        this.history = [];
-    }
-
-    // these things might need to move
-    restartGame(yellowStarts: boolean): void {
-        this.mainGraph = new Graph(tilesAcrossDefault, yellowStarts);
+    constructor(tilesAcross: number, yellowStarts: boolean) {
+        this.mainGraph = new Graph(tilesAcross, yellowStarts);
         this.history = [];
     }
 
