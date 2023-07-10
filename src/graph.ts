@@ -56,7 +56,23 @@ export class Graph {
      * TODO
      * implement taking the original graph and turning it into a bitboard where the first two bits represent yellow and red and the following 8 represent the bridges
      */
-    translateGraphToBitboard() {}
+    translateGraphToBitboard() {
+        let matrix = Array(this.tilesAcross)
+            .fill(0)
+            .map(() => Array(this.tilesAcross).fill(0));
+
+        // corners, potentially easier to implement
+        matrix[0][0] = 3;
+        matrix[0][this.tilesAcross - 1] = 3;
+        matrix[this.tilesAcross - 1][0] = 3;
+        matrix[this.tilesAcross - 1][this.tilesAcross - 1] = 3;
+
+        this.nodeList.forEach((node) => {
+            if (node.state != State.empty) {
+                matrix[node.x][node.y] = node.state == State.yellow ? 1 : 2;
+            }
+        });
+    }
 
     getNode(x: number, y: number): Node {
         return this.nodeList.find((node) => {
