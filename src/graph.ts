@@ -56,44 +56,30 @@ export class Graph {
      * TODO
      * implement taking the original graph and turning it into a bitboard where the first two bits represent yellow and red and the following 8 represent the bridges
      */
-    translateGraphToBitboard() {
+    graphToBitboard() {
         let matrix = Array(this.tilesAcross)
             .fill(0)
-            .map(() => Array(this.tilesAcross).fill(0));
-
-        // corners, potentially easier to implement
-        matrix[0][0] = 3;
-        matrix[0][this.tilesAcross - 1] = 3;
-        matrix[this.tilesAcross - 1][0] = 3;
-        matrix[this.tilesAcross - 1][this.tilesAcross - 1] = 3;
+            .map(() => Array(this.tilesAcross).fill(3));
 
         this.nodeList.forEach((node) => {
-            if (node.state != State.empty) {
-                matrix[node.x][node.y] = node.state == State.yellow ? 1 : 2;
+            if (node.state == State.empty) {
+                matrix[node.x][node.y] = 0;
+                return;
             }
+            matrix[node.x][node.y] = node.state == State.yellow ? 1 : 2;
 
-            let bridges = 0;
             node.edges.forEach((edge) => {
-                let bridgeIndex = 0;
                 let offsetX = edge.x - node.x;
                 let offsetY = edge.y - node.y;
 
-                if (offsetX < 0) {
-                    bridgeIndex |= 4;
-                }
-                if (Math.abs(offsetX) == 1) {
-                    bridgeIndex |= 2;
-                }
-                if (offsetY < 0) {
-                    bridgeIndex |= 1;
-                }
+                let bridgeIndex = (offsetX < 0 ? 4 : 0) | (offsetY < 0 ? 1 : 0) | (Math.abs(offsetX) == 1 ? 2 : 0);
                 // console.log(`node at: [${node.x}, ${node.y}]\n in direction x = ${offsetX}, y = ${offsetY}\n with direction index ${bridgeIndex}`);
 
                 matrix[node.x][node.y] |= (2 ** bridgeIndex) << 2;
             });
         });
 
-        console.table(matrix);
+        console.table(transpose(matrix, 10));
     }
 
     getNode(x: number, y: number): Node {
@@ -131,7 +117,7 @@ export class Graph {
 
         if (bridgeAdded) {
             this.checkWinCondition();
-            this.translateGraphToBitboard();
+            this.graphToBitboard();
         }
 
         this.yellowsTurn = !this.yellowsTurn;
@@ -202,4 +188,12 @@ export class Graph {
             this.gameWon = this.yellowsTurn ? State.yellow : State.red;
         }
     }
+}
+
+function transpose(a: number[][], numeral: number) {
+    return Object.keys(a[0]).map(function (c: any) {
+        return a.map(function (r) {
+            return numeral == 10 ? r[c] : r[c].toString(numeral);
+        });
+    });
 }
