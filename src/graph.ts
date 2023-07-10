@@ -71,7 +71,29 @@ export class Graph {
             if (node.state != State.empty) {
                 matrix[node.x][node.y] = node.state == State.yellow ? 1 : 2;
             }
+
+            let bridges = 0;
+            node.edges.forEach((edge) => {
+                let bridgeIndex = 0;
+                let offsetX = edge.x - node.x;
+                let offsetY = edge.y - node.y;
+
+                if (offsetX < 0) {
+                    bridgeIndex |= 4;
+                }
+                if (Math.abs(offsetX) == 1) {
+                    bridgeIndex |= 2;
+                }
+                if (offsetY < 0) {
+                    bridgeIndex |= 1;
+                }
+                // console.log(`node at: [${node.x}, ${node.y}]\n in direction x = ${offsetX}, y = ${offsetY}\n with direction index ${bridgeIndex}`);
+
+                matrix[node.x][node.y] |= (2 ** bridgeIndex) << 2;
+            });
         });
+
+        console.table(matrix);
     }
 
     getNode(x: number, y: number): Node {
@@ -109,6 +131,7 @@ export class Graph {
 
         if (bridgeAdded) {
             this.checkWinCondition();
+            this.translateGraphToBitboard();
         }
 
         this.yellowsTurn = !this.yellowsTurn;
