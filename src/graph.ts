@@ -52,13 +52,19 @@ export class Graph {
         return clonedGraph;
     }
 
+    /**
+     * TODO
+     * implement taking the original graph and turning it into a bitboard where the first two bits represent yellow and red and the following 8 represent the bridges
+     */
+    translateGraphToBitboard() {}
+
     getNode(x: number, y: number): Node {
         return this.nodeList.find((node) => {
             return node.x == x && node.y == y;
         });
     }
 
-    tryAddingNode(x: number, y: number): boolean {
+    addNode(x: number, y: number): boolean {
         let node = this.getNode(x, y);
 
         if (node.state != State.empty) return false;
