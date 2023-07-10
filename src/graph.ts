@@ -28,11 +28,13 @@ export class Graph {
     gameWon: number;
     evaluation: number;
 
+    bridgeBitsOffset: number;
     matrix: number[][];
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.yellowsTurn = yellowsTurn;
         this.gameWon = 0;
+        this.bridgeBitsOffset = 2;
         this.matrix = Array(tilesAcross)
             .fill(0)
             .map(() => Array(tilesAcross).fill(0));
@@ -87,6 +89,8 @@ export class Graph {
             this.checkWinCondition();
         }
 
+        console.log(this.gameWon);
+
         this.yellowsTurn = !this.yellowsTurn;
         return true;
     }
@@ -104,7 +108,7 @@ export class Graph {
                 if ((rectX == nodeA.x && rectY == nodeA.y) || (rectX == nodeB.x && rectY == nodeB.y)) continue;
 
                 // only check the nodes that have bridges
-                let bridges = this.matrix[rectX][rectY] >> 2;
+                let bridges = this.matrix[rectX][rectY] >> this.bridgeBitsOffset;
                 if (!bridges) continue;
 
                 // go over each bridge and check for intersection with the original one
@@ -124,6 +128,47 @@ export class Graph {
 
     checkWinCondition(): void {
         console.log("checking win condition...");
+        // let winMatrix = Array(this.matrix.length)
+        //     .fill(0)
+        //     .map(() => Array(this.matrix.length).fill(false));
+
+        // let nodeQueue = new Set<number[]>();
+        // for (let i = 1; i < this.matrix.length - 1; i++) {
+        //     if (this.yellowsTurn) {
+        //         if ((this.matrix[i][0] & 3) == 1) {
+        //             nodeQueue.add([i, 0]);
+        //         }
+        //     } else {
+        //         if ((this.matrix[0][i] & 3) == 2) {
+        //             nodeQueue.add([0, i]);
+        //         }
+        //     }
+        // }
+
+        // console.log(nodeQueue);
+
+        // let connectionFound: boolean = false;
+
+        // nodeQueue.forEach((node) => {
+        //     if (connectionFound) return;
+        //     if ((this.yellowsTurn && node[1] == this.matrix.length - 1) || (!this.yellowsTurn && node[0] == this.matrix.length - 1)) {
+        //         connectionFound = true;
+        //         return;
+        //     }
+        //     let bridges = this.matrix[node[0]][node[1]] >> this.bridgeBitsOffset;
+        //     if (!bridges) return;
+
+        //     for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+        //         if (!(bridges & (2 ** directionIndex))) continue;
+        //         let next = pointInDirectionOfIndex(node[0], node[1], directionIndex);
+        //         if (!nodeQueue.has([next.x, next.y])) nodeQueue.add([next.x, next.y]);
+        //     }
+        //     console.log(node);
+        // });
+        // if (connectionFound) {
+        //     this.gameWon = this.yellowsTurn ? 1 : 2;
+        // }
+
         // let nodeQueue = new Set<Node>();
         // for (let i = 1; i < this.tilesAcross - 1; i++) {
         //     let startNode = this.yellowsTurn ? this.getNode(i, 0) : this.getNode(0, i);

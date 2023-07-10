@@ -38,7 +38,7 @@ class View {
                 // draw bridges
                 this.ctx.lineWidth = this.tileSize / 12;
                 this.ctx.strokeStyle = this._numberToColor(entry);
-                let bridges = entry >> 2;
+                let bridges = entry >> graph.bridgeBitsOffset;
                 if (!bridges) return;
 
                 for (let i = 0; i < 8; i++) {
