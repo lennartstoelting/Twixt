@@ -29,10 +29,31 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <span class="modal-close">&times;</span>
-                    <h2>Restart the game</h2>
+                    <h2>Restart Game</h2>
                 </div>
                 <div class="modal-body">
                     <form>
+                        <ul class="flex-outer">
+                            <li class="libuttons">
+                                <input type="button" id="p1-color" value="Player 1" />
+                                <input type="button" id="p2-color" value="Player 2" />
+                            </li>
+                            <li class="libuttons">
+                                <input type="button" id="p1-ai" value="Human" />
+                                <input type="button" id="p2-ai" value="Computer" />
+                            </li>
+                            <br />
+                            <li class="board-size-selection">
+                                <label for="board-size">Board Size</label><br />
+                                <input type="number" id="board-size" name="Board size" min="4" max="24" value="10" />
+                            </li>
+                            <br />
+                            <li class="libuttons">
+                                <input type="submit" id="start" value="Start" />
+                            </li>
+                        </ul>
+                    </form>
+                    <!-- <form>
                         <input type="radio" id="y" name="who-starts" value="Yellow" />
                         <label for="y">Yellow</label><br />
                         <input type="radio" id="r" name="who-starts" value="Red" />
@@ -43,7 +64,7 @@
                         <input type="number" id="board-size" name="Board size" min="4" max="24" value="10" />
                     </form>
                     <button id="yellow-starts">Yellow</button>
-                    <button id="red-starts">Red</button>
+                    <button id="red-starts">Red</button> -->
                 </div>
             </div>
         </div>
