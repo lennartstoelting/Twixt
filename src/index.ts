@@ -46,8 +46,6 @@ class Controller {
         this.toggleBlockadesButton = document.getElementById("toggle-blockades");
         this.startGameModal = document.getElementById("startGameModal");
         this.startGameModalCloseButton = document.getElementsByClassName("modal-close")[0];
-        this.yellowStartsButton = document.getElementById("yellow-starts");
-        this.redStartsButton = document.getElementById("red-starts");
         this.gameWonModal = document.getElementById("gameWonModal");
         this.gameWonModalCloseButton = document.getElementsByClassName("modal-close")[1];
         this.winnerInfo = document.getElementById("winner-info");
@@ -75,18 +73,18 @@ class Controller {
         this.startGameModalCloseButton.addEventListener("click", () => {
             this.startGameModal.style.display = "none";
         });
-        this.yellowStartsButton.addEventListener("click", () => {
-            this.model = new Model(tilesAcrossDefault, true);
-            this.updateView();
-            this.startGameModal.style.display = "none";
-            this.gameWonModalShown = false;
-        });
-        this.redStartsButton.addEventListener("click", () => {
-            this.model = new Model(tilesAcrossDefault, false);
-            this.updateView();
-            this.startGameModal.style.display = "none";
-            this.gameWonModalShown = false;
-        });
+        // this.yellowStartsButton.addEventListener("click", () => {
+        //     this.model = new Model(tilesAcrossDefault, true);
+        //     this.updateView();
+        //     this.startGameModal.style.display = "none";
+        //     this.gameWonModalShown = false;
+        // });
+        // this.redStartsButton.addEventListener("click", () => {
+        //     this.model = new Model(tilesAcrossDefault, false);
+        //     this.updateView();
+        //     this.startGameModal.style.display = "none";
+        //     this.gameWonModalShown = false;
+        // });
 
         this.gameWonModalCloseButton.addEventListener("click", () => {
             this.gameWonModal.style.display = "none";
@@ -100,6 +98,8 @@ class Controller {
             this.gameWonModal.style.display = "none";
             this.gameWonModalShown = true;
         });
+
+        this.startGameModal.style.display = "block";
     }
 
     updateView(): void {

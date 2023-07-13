@@ -39,7 +39,7 @@ body {
 button {
     padding: 20px;
     margin: 10px;
-    box-shadow: 5px 5px 20px gray;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     border-radius: 5px;
     border: none;
     cursor: pointer;
@@ -102,81 +102,47 @@ button:hover {
 }
 
 .modal-body {
-    padding: 16px;
+    /* padding: 16px; */
+    border: goldenrod 2px solid;
+}
+
+#restart-game-form {
     display: flex;
-    flex-flow: row wrap;
-    justify-content: space-evenly;
-}
-
-.modal-body > * {
-    color: black;
-    flex: 1 1 0px;
-}
-
-.flex-outer {
-    padding: 0px;
-    margin: 0px;
-}
-
-.flex-outer li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.libuttons > *,
-.board-size-selection {
-    padding: 20px;
-    margin: 10px;
-    box-shadow: 5px 5px 20px gray;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    flex: 1 1 0px; /*make buttons grow to same size always*/
-    background-color: blue;
-    color: white;
-}
-
-.libuttons > *:hover,
-.board-size-selection:hover {
-    border: 1px solid black;
-    transition: 0.25s;
-}
-
-.board-size-selection {
-    display: flex;
-    flex-flow: row wrap;
-}
-
-.board-size-selection > * {
-    padding: 0px 20px;
-    flex: 1 1 0px;
+    flex-flow: column wrap;
+    justify-content: center;
+    align-items: stretch;
     text-align: center;
-    background-color: blue;
-    border: none;
-    color: white;
 }
 
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+#restart-game-form > * {
+    flex: 1 1 0px;
 }
 
-/* Firefox */
-input[type="number"] {
-    -moz-appearance: textfield;
+#player-selection {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
 }
 
-#p1-color {
+#player-selection > * {
+    flex: 1 1 0px;
+}
+
+#yellow-selection {
     background-color: yellow;
-    color: black;
 }
 
-#p2-color {
+#red-selection {
     background-color: red;
-    color: white;
+}
+
+/* temporary */
+#board-size-selection {
+    background-color: green;
+}
+
+#start-selection {
+    background-color: black;
 }
 
 @keyframes animatetop {
