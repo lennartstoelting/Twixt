@@ -1,4 +1,4 @@
-import { Graph, pointInDirectionOfIndex } from "./graph";
+import { Graph } from "./graph";
 
 class View {
     board: any;
@@ -7,59 +7,59 @@ class View {
     tileSize: number;
     corners: number[];
 
-    whosTurn: HTMLElement;
+    turnInfo: HTMLElement;
     boardContainer: HTMLElement;
 
     constructor() {
-        this.whosTurn = document.getElementById("whos-turn");
+        this.turnInfo = document.getElementById("turn-info");
         this.boardContainer = document.getElementById("board-container");
     }
 
     drawBoard(graph: Graph, gridlines: boolean, blockades: boolean): void {
+        // this line could be made shorter
+        this.turnInfo.innerHTML = "It's " + (graph.yellowsTurn ? "yellow" : "red") + "'s turn";
+        this.boardContainer.innerHTML = "";
+
         this._createCanvas(graph);
         if (gridlines) {
             this._drawGridlines();
         }
         this._drawFinishLines();
 
-        graph.matrix.forEach((column, x) => {
-            column.forEach((entry, y) => {
-                if (entry == 3) return;
+        graph.nodeList.forEach((node) => {
+            let nodeCenterX = node.x * this.tileSize + this.tileSize / 2;
+            let nodeCenterY = node.y * this.tileSize + this.tileSize / 2;
 
-                let nodeCenterX = x * this.tileSize + this.tileSize / 2;
-                let nodeCenterY = y * this.tileSize + this.tileSize / 2;
+            // draw hole or pin
+            this.ctx.beginPath();
+            this.ctx.arc(nodeCenterX, nodeCenterY, this.tileSize / 6, 0, 2 * Math.PI);
+            this.ctx.fillStyle = node.state;
+            this.ctx.fill();
 
-                // draw hole or pin
+            // draw bridges
+            this.ctx.lineWidth = this.tileSize / 12;
+            this.ctx.strokeStyle = node.state;
+            node.edges.forEach((edge) => {
                 this.ctx.beginPath();
-                this.ctx.arc(nodeCenterX, nodeCenterY, this.tileSize / 6, 0, 2 * Math.PI);
-                this.ctx.fillStyle = this._numberToColor(entry);
-                this.ctx.fill();
+                this.ctx.moveTo(nodeCenterX, nodeCenterY);
+                this.ctx.lineTo(edge.x * this.tileSize + this.tileSize / 2, edge.y * this.tileSize + this.tileSize / 2);
+                this.ctx.stroke();
+            });
 
-                // draw bridges
-                this.ctx.lineWidth = this.tileSize / 12;
-                this.ctx.strokeStyle = this._numberToColor(entry);
-                let bridges = entry >> graph.bridgeBitsOffset;
-                if (!bridges) return;
-
-                for (let i = 0; i < 8; i++) {
-                    if (!(bridges & (2 ** i))) continue;
-
-                    let connectedCoord = pointInDirectionOfIndex(x, y, i);
-
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(nodeCenterX, nodeCenterY);
-                    this.ctx.lineTo(connectedCoord.x * this.tileSize + this.tileSize / 2, connectedCoord.y * this.tileSize + this.tileSize / 2);
-                    this.ctx.stroke();
-                }
+            // draw blockade
+            if (!blockades) return;
+            this.ctx.strokeStyle = "black";
+            node.blockades.forEach((block) => {
+                this.ctx.beginPath();
+                this.ctx.moveTo(nodeCenterX, nodeCenterY);
+                this.ctx.lineTo(block.x * this.tileSize + this.tileSize / 2, block.y * this.tileSize + this.tileSize / 2);
+                this.ctx.stroke();
             });
         });
-
-        // this line could be made shorter
-        this.whosTurn.innerHTML = graph.yellowsTurn ? "yellow" : "red";
     }
 
     // this can probably be changed with clearRect instead of creating a whole new instance of the canvas
-    private _createCanvas(graph: Graph): void {
+    _createCanvas(graph: Graph): void {
         this.board = document.createElement("canvas");
         this.board.id = "board";
         this.board.style.background = "blue";
@@ -68,15 +68,15 @@ class View {
         this.board.style.margin = "1%";
         this.board.width = this.boardContainer.clientWidth * 0.98;
         this.board.height = this.boardContainer.clientHeight * 0.98;
-        this.boardContainer.innerHTML = "";
+        // this.board.addEventListener("click", this.boardClicked);
         this.boardContainer.appendChild(this.board);
 
         this.ctx = this.board.getContext("2d");
         this.boardSideLength = this.board.clientWidth;
-        this.tileSize = this.boardSideLength / graph.matrix.length;
+        this.tileSize = this.boardSideLength / graph.tilesAcross;
     }
 
-    private _drawGridlines(): void {
+    _drawGridlines(): void {
         this.ctx.beginPath();
         for (let l = 0; l <= this.boardSideLength; l += this.tileSize) {
             this.ctx.moveTo(l, 0);
@@ -89,7 +89,7 @@ class View {
         this.ctx.stroke();
     }
 
-    private _drawFinishLines(): void {
+    _drawFinishLines(): void {
         this.corners = [
             this.tileSize,
             this.tileSize + this.tileSize / 4,
@@ -113,18 +113,6 @@ class View {
         this.ctx.moveTo(this.corners[1], this.corners[2]);
         this.ctx.lineTo(this.corners[3], this.corners[2]);
         this.ctx.stroke();
-    }
-
-    private _numberToColor(value: number): string {
-        if (value == 0) {
-            return "black";
-        }
-        if (value & 1) {
-            return "yellow";
-        }
-        if (value & 2) {
-            return "red";
-        }
     }
 }
 

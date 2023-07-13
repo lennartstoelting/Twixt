@@ -59,7 +59,7 @@ button:hover {
 .modal {
     display: none;
     position: fixed; /* Stay in place */
-    padding-top: 15%;
+    padding-top: 10%;
     z-index: 1; /* Sit on top */
     left: 0;
     top: 0;
@@ -106,27 +106,77 @@ button:hover {
     display: flex;
     flex-flow: row wrap;
     justify-content: space-evenly;
-    gap: 3%;
 }
 
 .modal-body > * {
     color: black;
+    flex: 1 1 0px;
 }
 
-#yellow-starts {
+.flex-outer {
+    padding: 0px;
+    margin: 0px;
+}
+
+.flex-outer li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.libuttons > *,
+.board-size-selection {
+    padding: 20px;
+    margin: 10px;
+    box-shadow: 5px 5px 20px gray;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    flex: 1 1 0px; /*make buttons grow to same size always*/
+    background-color: blue;
+    color: white;
+}
+
+.libuttons > *:hover,
+.board-size-selection:hover {
+    border: 1px solid black;
+    transition: 0.25s;
+}
+
+.board-size-selection {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+.board-size-selection > * {
+    padding: 0px 20px;
+    flex: 1 1 0px;
+    text-align: center;
+    background-color: blue;
+    border: none;
+    color: white;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+#p1-color {
     background-color: yellow;
+    color: black;
 }
 
-#yellow-starts:hover {
-    background-color: rgb(202, 202, 24);
-}
-
-#red-starts {
+#p2-color {
     background-color: red;
-}
-
-#red-starts:hover {
-    background-color: rgb(250, 105, 105);
+    color: white;
 }
 
 @keyframes animatetop {

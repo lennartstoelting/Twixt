@@ -1,3 +1,4 @@
+import { State } from "./graph";
 import Model from "./model";
 import View from "./view";
 
@@ -5,6 +6,9 @@ import View from "./view";
 
 var tilesAcrossDefault = 6;
 
+// TODO implement the gameWonModalShown to a point that it is usable again
+// clean up and organize code a lot
+// potentially move some functionality from model to controller/index
 class Controller {
     model: Model;
     view: View;
@@ -67,8 +71,6 @@ class Controller {
         this.toggleBlockadesButton.addEventListener("click", () => {
             this.showBlockades = !this.showBlockades;
             this.updateView();
-
-            console.table(transpose(this.model.mainGraph.matrix, 10));
         });
         this.startGameModalCloseButton.addEventListener("click", () => {
             this.startGameModal.style.display = "none";
@@ -110,13 +112,14 @@ class Controller {
         // calculate which tile was clicked from global coordinates to matrix coordinates
         var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
         var y = Math.floor((event.clientY - rect.top) / this.view.tileSize);
-
+        // the corners of the playing field
+        if ((x == 0 || x == this.model.mainGraph.tilesAcross - 1) && (y == 0 || y == this.model.mainGraph.tilesAcross - 1)) return;
         // console.log("clicked hole: (x: " + x + ", y: " + y + ")");
         let nodePlayed = this.model.tryPlacingPin(x, y);
         if (nodePlayed) {
             this.updateView();
         }
-        if (this.model.mainGraph.gameWon != 0 && !this.gameWonModalShown) {
+        if (this.model.mainGraph.gameWon != State.empty && !this.gameWonModalShown) {
             this.winnerInfo.innerHTML = this.model.mainGraph.gameWon + " won!";
             this.gameWonModal.style.display = "block";
             this.gameWonModalShown = true;
@@ -125,12 +128,3 @@ class Controller {
 }
 
 const app = new Controller();
-
-// mostly for console.table() but also potentially for transposition
-function transpose(a: number[][], numeral: number) {
-    return Object.keys(a[0]).map(function (c: any) {
-        return a.map(function (r) {
-            return numeral == 10 ? r[c] : r[c].toString(numeral);
-        });
-    });
-}
