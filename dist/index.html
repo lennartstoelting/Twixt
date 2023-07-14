@@ -13,7 +13,9 @@
     <body>
         <div id="board-container"></div>
         <div id="info-container">
-            <div id="game-logo"><h1>Twixt</h1></div>
+            <div id="game-logo">
+                <h1 id="twixt-logo">Twixt</h1>
+            </div>
             <div id="turn-info">It's <span id="whos-turn"></span>'s turn</div>
             <div id="game-buttons">
                 <button id="restart-game">Restart Game</button>
@@ -29,23 +31,27 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <span class="modal-close">&times;</span>
-                    <h2>Restart Game</h2>
+                    <h2>Setup new Game</h2>
                 </div>
                 <div class="modal-body">
                     <form id="restart-game-form">
-                        <div id="player-selection">
-                            <div id="yellow-selection">
-                                <label>Yellow</label>
-                            </div>
-                            <div id="red-selection">
-                                <label>Red</label>
-                            </div>
+                        <div id="yellow-selection">
+                            <label>Yellow</label>
+                            <input type="button" value="Player" />
+                            <input type="button" value="starts" />
+                        </div>
+                        <div id="red-selection">
+                            <label>Red</label>
+                            <input type="button" value="Computer" />
+                            <input type="button" value="goes second" />
                         </div>
                         <div id="board-size-selection">
-                            <label>Board Size</label>
+                            <label for="board-size-slider">Board Size</label>
+                            <input type="range" min="4" max="24" value="6" id="board-size-slider" />
+                            <label>6x6</label>
                         </div>
                         <div id="start-selection">
-                            <input type="button" value="Start Game" />
+                            <input type="button" value="Start" />
                         </div>
                     </form>
                 </div>

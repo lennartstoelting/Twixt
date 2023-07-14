@@ -99,7 +99,7 @@ class Controller {
             this.gameWonModalShown = true;
         });
 
-        this.startGameModal.style.display = "block";
+        // this.startGameModal.style.display = "block";
     }
 
     updateView(): void {
