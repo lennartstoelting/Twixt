@@ -44,9 +44,9 @@ class Controller {
         this.undoMoveButton = document.getElementById("undo-move");
         this.toggleGridlinesButton = document.getElementById("toggle-gridlines");
         this.toggleBlockadesButton = document.getElementById("toggle-blockades");
-        this.startGameModal = document.getElementById("startGameModal");
+        this.startGameModal = document.getElementById("start-game-modal");
         this.startGameModalCloseButton = document.getElementsByClassName("modal-close")[0];
-        this.gameWonModal = document.getElementById("gameWonModal");
+        this.gameWonModal = document.getElementById("game-won-modal");
         this.gameWonModalCloseButton = document.getElementsByClassName("modal-close")[1];
         this.winnerInfo = document.getElementById("winner-info");
         this.restartGameAgainButton = document.getElementById("restart-game-again");
@@ -98,8 +98,6 @@ class Controller {
             this.gameWonModal.style.display = "none";
             this.gameWonModalShown = true;
         });
-
-        // this.startGameModal.style.display = "block";
     }
 
     updateView(): void {
