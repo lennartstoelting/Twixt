@@ -6,9 +6,6 @@ import View from "./view";
 
 var tilesAcrossDefault = 6;
 
-// TODO implement the gameWonModalShown to a point that it is usable again
-// clean up and organize code a lot
-// potentially move some functionality from model to controller/index
 class Controller {
     model: Model;
     view: View;
@@ -17,12 +14,11 @@ class Controller {
     showBlockades: boolean;
     gameWonModalShown: boolean; // has the player already seen the game won Modal and wanted to keep playing?
 
-    // game-buttons
-    restartGameButton: HTMLElement;
-    undoMoveButton: HTMLElement;
-    // debug-buttons
-    toggleGridlinesButton: HTMLElement;
-    toggleBlockadesButton: HTMLElement;
+    // game-/debug-buttons
+    restartGameButton: HTMLButtonElement;
+    undoMoveButton: HTMLButtonElement;
+    toggleGridlinesButton: HTMLButtonElement;
+    toggleBlockadesButton: HTMLButtonElement;
 
     // setup game modal
     setupGameModal: HTMLElement;
@@ -33,13 +29,14 @@ class Controller {
     redStartsButton: HTMLInputElement;
     boardSizeSlider: HTMLInputElement;
     boardSizeLabel: HTMLElement;
-    startButton: HTMLElement;
+    startButton: HTMLInputElement;
+
     // game won modal
     gameWonModal: HTMLElement;
     gameWonModalCloseButton: HTMLElement;
     winnerInfo: HTMLElement;
-    restartGameAgainButton: HTMLElement;
-    keepPlayingButton: HTMLElement;
+    restartGameAgainButton: HTMLButtonElement;
+    keepPlayingButton: HTMLButtonElement;
 
     constructor() {
         this.model = new Model(tilesAcrossDefault, true, false, false);
@@ -52,11 +49,13 @@ class Controller {
     }
 
     _getDomElements(): void {
-        this.restartGameButton = document.getElementById("restart-game");
-        this.undoMoveButton = document.getElementById("undo-move");
-        this.toggleGridlinesButton = document.getElementById("toggle-gridlines");
-        this.toggleBlockadesButton = document.getElementById("toggle-blockades");
+        // game-/debug-buttons
+        this.restartGameButton = document.getElementById("restart-game") as HTMLButtonElement;
+        this.undoMoveButton = document.getElementById("undo-move") as HTMLButtonElement;
+        this.toggleGridlinesButton = document.getElementById("toggle-gridlines") as HTMLButtonElement;
+        this.toggleBlockadesButton = document.getElementById("toggle-blockades") as HTMLButtonElement;
 
+        // setup game modal
         this.setupGameModal = document.getElementById("start-game-modal");
         this.setupGameModalCloseButton = document.getElementsByClassName("modal-close")[0] as HTMLElement;
         this.yellowAiButton = document.getElementById("yellow-ai") as HTMLInputElement;
@@ -65,7 +64,7 @@ class Controller {
         this.redStartsButton = document.getElementById("red-starts") as HTMLInputElement;
         this.boardSizeSlider = document.getElementById("board-size") as HTMLInputElement;
         this.boardSizeLabel = document.getElementById("board-size-label");
-        this.startButton = document.getElementById("start");
+        this.startButton = document.getElementById("start") as HTMLInputElement;
 
         this.yellowAiButton.value = "Player";
         this.yellowStartsButton.value = "goes first";
@@ -74,11 +73,12 @@ class Controller {
         this.boardSizeSlider.value = tilesAcrossDefault.toString();
         this.boardSizeLabel.innerHTML = `${tilesAcrossDefault}x${tilesAcrossDefault}`;
 
+        // game won modal
         this.gameWonModal = document.getElementById("game-won-modal");
         this.gameWonModalCloseButton = document.getElementsByClassName("modal-close")[1] as HTMLElement;
         this.winnerInfo = document.getElementById("winner-info");
-        this.restartGameAgainButton = document.getElementById("restart-game-again");
-        this.keepPlayingButton = document.getElementById("keep-playing");
+        this.restartGameAgainButton = document.getElementById("restart-game-again") as HTMLButtonElement;
+        this.keepPlayingButton = document.getElementById("keep-playing") as HTMLButtonElement;
     }
 
     _initEventListeners(): void {
@@ -86,14 +86,13 @@ class Controller {
             this.updateView();
         });
 
-        // game-buttons
+        // game-/debug-buttons
         this.restartGameButton.addEventListener("click", () => {
             this.setupGameModal.style.display = "block";
         });
         this.undoMoveButton.addEventListener("click", () => {
             this.model.undoMove() ? this.updateView() : console.log("no more positions in history array");
         });
-        // debug-buttons
         this.toggleGridlinesButton.addEventListener("click", () => {
             this.showGridlines = !this.showGridlines;
             this.updateView();
@@ -124,9 +123,7 @@ class Controller {
         this.boardSizeSlider.addEventListener("input", () => {
             this.boardSizeLabel.innerHTML = `${this.boardSizeSlider.value}x${this.boardSizeSlider.value}`;
         });
-
         this.startButton.addEventListener("click", () => {
-            // TODO: add ai functionality
             this.model = new Model(
                 parseInt(this.boardSizeSlider.value),
                 this.yellowStartsButton.value == "goes first",
