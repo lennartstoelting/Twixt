@@ -1,6 +1,7 @@
+/* --------------------------- general --------------------------- */
+
 @import url("https://fonts.googleapis.com/css2?family=Caprasimo&display=swap");
 
-/* position and layout */
 body {
     margin: 0px;
     display: flex;
@@ -11,6 +12,8 @@ body {
 * {
     font-family: "Caprasimo", cursive;
 }
+
+/* --------------------------- board --------------------------- */
 
 @media all and (orientation: landscape) {
     #board-container {
@@ -25,6 +28,8 @@ body {
         height: 100vw;
     }
 }
+
+/* --------------------------- info-container --------------------------- */
 
 #info-container {
     flex-grow: 1;
@@ -70,9 +75,8 @@ button:hover {
     transition: 0.25s;
 }
 
-/* --------------------------- modal stuff --------------------------- */
+/* --------------------------- modals --------------------------- */
 
-/* The Modal (background) */
 .modal {
     display: none;
     position: fixed; /* Stay in place */
@@ -86,7 +90,6 @@ button:hover {
     background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
 }
 
-/* The Close Button */
 .modal-close {
     color: #5a5a5a;
     float: right;
@@ -118,6 +121,8 @@ button:hover {
     padding: 2px 16px;
     color: black;
 }
+
+/* --------------------------- restart-game-modal --------------------------- */
 
 #restart-game-form {
     display: grid;
@@ -202,6 +207,8 @@ input[type="button"] {
     grid-gap: 1em;
     padding: 1em;
 }
+
+/* --------------------------- modal-animation --------------------------- */
 
 @keyframes animatetop {
     from {
