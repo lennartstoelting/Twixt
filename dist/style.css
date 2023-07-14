@@ -53,7 +53,7 @@ body {
 }
 
 button {
-    padding: 20px;
+    padding: 15px;
     margin: 10px;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     border-radius: 5px;
@@ -62,6 +62,7 @@ button {
     flex: 1 1 0px; /*make buttons grow to same size always*/
     background-color: blue;
     color: white;
+    font-size: 2.5vh;
 }
 
 button:hover {
@@ -75,7 +76,7 @@ button:hover {
 .modal {
     display: none;
     position: fixed; /* Stay in place */
-    padding-top: 12vh;
+    padding-top: 10vh;
     z-index: 1; /* Sit on top */
     left: 50%;
     top: 50%;
@@ -157,14 +158,15 @@ input[type="button"] {
     background-color: blue;
     color: white;
     border: none;
-    padding: 20px;
+    padding: 15px;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     border-radius: 5px;
     cursor: pointer;
     width: 95%;
+    font-size: 2.5vh;
 }
 
-#board-size-slider {
+#board-size {
     width: 95%;
     height: 10px;
     border-radius: 5px;
@@ -175,7 +177,7 @@ input[type="button"] {
     transition: opacity 0.2s;
 }
 
-#board-size-slider::-webkit-slider-thumb {
+#board-size::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 25px;
@@ -185,7 +187,7 @@ input[type="button"] {
     cursor: pointer;
 }
 
-#board-size-slider::-moz-range-thumb {
+#board-size::-moz-range-thumb {
     width: 25px;
     height: 25px;
     border-radius: 50%;

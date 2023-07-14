@@ -7,10 +7,14 @@ import { Graph } from "./graph";
 class Model {
     mainGraph: Graph;
     history: Graph[];
+    yellowAI: boolean;
+    redAI: boolean;
 
-    constructor(tilesAcross: number, yellowStarts: boolean) {
+    constructor(tilesAcross: number, yellowStarts: boolean, yellowAI: boolean, redAI: boolean) {
         this.mainGraph = new Graph(tilesAcross, yellowStarts);
         this.history = [];
+        this.yellowAI = yellowAI;
+        this.redAI = redAI;
     }
 
     tryPlacingPin(x: number, y: number): boolean {

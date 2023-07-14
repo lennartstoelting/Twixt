@@ -37,21 +37,21 @@
                     <form id="restart-game-form">
                         <div id="yellow-selection">
                             <label>Yellow</label>
-                            <input type="button" value="Player" />
-                            <input type="button" value="starts" />
+                            <input type="button" id="yellow-ai" />
+                            <input type="button" id="yellow-starts" />
                         </div>
                         <div id="red-selection">
                             <label>Red</label>
-                            <input type="button" value="Computer" />
-                            <input type="button" value="goes second" />
+                            <input type="button" id="red-ai" />
+                            <input type="button" id="red-starts" />
                         </div>
                         <div id="board-size-selection">
-                            <label for="board-size-slider">Board Size</label>
-                            <input type="range" min="4" max="24" value="6" id="board-size-slider" />
-                            <label>6x6</label>
+                            <label for="board-size">Board Size</label>
+                            <input type="range" min="4" max="24" id="board-size" />
+                            <label id="board-size-label"></label>
                         </div>
                         <div id="start-selection">
-                            <input type="button" value="Start" />
+                            <input type="button" id="start" value="Start" />
                         </div>
                     </form>
                 </div>
