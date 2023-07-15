@@ -96,7 +96,7 @@ class Controller {
         this.toggleGridlinesButton.addEventListener("click", () => {
             // this.showGridlines = !this.showGridlines;
             // this.updateView();
-            this.model.minimaxStart(2);
+            this.model.minimaxStart(4);
         });
         this.toggleBlockadesButton.addEventListener("click", () => {
             this.showBlockades = !this.showBlockades;

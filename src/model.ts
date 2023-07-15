@@ -34,22 +34,21 @@ class Model {
     }
 
     //returns best next move
+    // make everything async so that the user interface stays responsive
     minimaxStart(depth: number): void {
         let possibleMoves = this.mainGraph.getPossibleMoves();
-        let possibleGraphs: Graph[] = [];
+        let evalArray: string[] = [];
 
         possibleMoves.forEach((move: number[]) => {
             let currGraph = this.mainGraph.clone();
             currGraph.addNode(move[0], move[1]);
-            possibleGraphs.push(currGraph);
+            evalArray.push(`move: [${move}], evaluation: ${this.minimax(depth - 1, currGraph, -Infinity, Infinity)}`);
         });
 
-        possibleGraphs.forEach((graph) => {
-            console.log(graph.nodeList);
-            console.log(`eval: ${this.minimax(depth - 1, graph, -Infinity, Infinity)}`);
-        });
+        console.log(evalArray);
     }
 
+    // sort the graph so that pruning happens earlier
     minimax(depth: number, graph: Graph, alpha: number, beta: number): number {
         if (depth == 0 || graph.gameWon != State.empty) {
             return graph.score;
