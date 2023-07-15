@@ -4,7 +4,7 @@ import View from "./view";
 
 /** handles all input, checks in with model and displays the result with view */
 
-var tilesAcrossDefault = 5;
+var tilesAcrossDefault = 6;
 
 class Controller {
     model: Model;
@@ -153,7 +153,7 @@ class Controller {
     }
 
     updateView(): void {
-        this.view.drawBoard(this.model.mainGraph, this.showGridlines, this.showBlockades);
+        this.view.drawBoard(this.model.displayedGraph, this.showGridlines, this.showBlockades);
         this.view.board.addEventListener("click", () => this._boardClicked(event));
     }
 
@@ -163,14 +163,14 @@ class Controller {
         var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
         var y = Math.floor((event.clientY - rect.top) / this.view.tileSize);
         // the corners of the playing field
-        if ((x == 0 || x == this.model.mainGraph.tilesAcross - 1) && (y == 0 || y == this.model.mainGraph.tilesAcross - 1)) return;
+        if ((x == 0 || x == this.model.displayedGraph.tilesAcross - 1) && (y == 0 || y == this.model.displayedGraph.tilesAcross - 1)) return;
         // console.log("clicked hole: (x: " + x + ", y: " + y + ")");
         let nodePlayed = this.model.tryPlacingPin(x, y);
         if (nodePlayed) {
             this.updateView();
         }
-        if (this.model.mainGraph.gameWon != State.empty && !this.gameWonModalShown) {
-            this.winnerInfo.innerHTML = this.model.mainGraph.gameWon + " won!";
+        if (this.model.displayedGraph.gameWon != State.empty && !this.gameWonModalShown) {
+            this.winnerInfo.innerHTML = this.model.displayedGraph.gameWon + " won!";
             this.gameWonModal.style.display = "block";
             this.gameWonModalShown = true;
         }

@@ -116,7 +116,7 @@ export class Graph {
             this.checkWinCondition();
         }
 
-        this.evaluate();
+        this.score = this._calculateScore();
         this.yellowsTurn = !this.yellowsTurn;
         return true;
     }
@@ -195,22 +195,21 @@ export class Graph {
 
     /**
      * TODO make the score more advanced with more factors
+     * (not always coorect for both ideas)
      * who has more connecting bridges
      * who has a longer connection that is not yet a winning connection
      */
-    evaluate() {
+    _calculateScore() {
         if (this.gameWon == State.empty) {
-            this.score = 0;
+            return 0;
         }
         // the earlier the game is won, the higher the score
         let maxValue = this.tilesAcross ** 2 - 4 + this.getPossibleMoves().length;
         if (this.gameWon == State.yellow) {
-            this.score = maxValue;
-            return;
+            return maxValue;
         }
         if (this.gameWon == State.red) {
-            this.score = maxValue * -1;
-            return;
+            return maxValue * -1;
         }
     }
 }

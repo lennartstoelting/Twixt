@@ -5,21 +5,21 @@ import { Graph, State } from "./graph";
 // -------------------------------------------------
 
 class Model {
-    mainGraph: Graph;
+    displayedGraph: Graph;
     history: Graph[];
     yellowAI: boolean;
     redAI: boolean;
 
     constructor(tilesAcross: number, yellowStarts: boolean, yellowAI: boolean, redAI: boolean) {
-        this.mainGraph = new Graph(tilesAcross, yellowStarts);
+        this.displayedGraph = new Graph(tilesAcross, yellowStarts);
         this.history = [];
         this.yellowAI = yellowAI;
         this.redAI = redAI;
     }
 
     tryPlacingPin(x: number, y: number): boolean {
-        let currGraph = this.mainGraph.clone();
-        let pinPlaced = this.mainGraph.addNode(x, y);
+        let currGraph = this.displayedGraph.clone();
+        let pinPlaced = this.displayedGraph.addNode(x, y);
         if (!pinPlaced) return false;
         this.history.push(currGraph);
         return true;
@@ -29,18 +29,18 @@ class Model {
         if (this.history.length == 0) {
             return false;
         }
-        this.mainGraph = this.history.pop();
+        this.displayedGraph = this.history.pop();
         return true;
     }
 
-    //returns best next move
+    // returns best next move
     // make everything async so that the user interface stays responsive
     minimaxStart(depth: number): void {
-        let possibleMoves = this.mainGraph.getPossibleMoves();
+        let possibleMoves = this.displayedGraph.getPossibleMoves();
         let evalArray: string[] = [];
 
         possibleMoves.forEach((move: number[]) => {
-            let currGraph = this.mainGraph.clone();
+            let currGraph = this.displayedGraph.clone();
             currGraph.addNode(move[0], move[1]);
             evalArray.push(`move: [${move}], evaluation: ${this.minimax(depth - 1, currGraph, -Infinity, Infinity)}`);
         });
