@@ -1,7 +1,7 @@
 export enum State {
-    empty = "black",
     yellow = "Yellow",
     red = "Red",
+    empty = "black",
 }
 
 export class Node {
@@ -29,7 +29,7 @@ export class Graph {
     tilesAcross: number;
     nodeList: Node[];
     gameWon: State;
-    evaluation: number;
+    score: number;
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.nodeList = [];
@@ -52,10 +52,7 @@ export class Graph {
         return clonedGraph;
     }
 
-    /**
-     * turn graph it into a bitboard where the first two bits represent yellow and red and the following 8 represent the bridges
-     */
-    graphToBitboard() {
+    graphToBitboard(): number[][] {
         let matrix = Array(this.tilesAcross)
             .fill(0)
             .map(() => Array(this.tilesAcross).fill(3));
@@ -78,7 +75,8 @@ export class Graph {
             });
         });
 
-        console.table(transpose(matrix, 10));
+        // console.table(transpose(matrix, 10));
+        return matrix;
     }
 
     getNode(x: number, y: number): Node {
@@ -108,7 +106,7 @@ export class Graph {
 
             let edgeAdded = this.addEdge(node, potentialNode);
             if (!edgeAdded) {
-                console.log("Edge to potential Node (" + potentialNode.x + ", " + potentialNode.y + ") couldn't be added");
+                // console.log("Edge to potential Node (" + potentialNode.x + ", " + potentialNode.y + ") couldn't be added");
                 continue;
             }
             bridgeAdded = true;
@@ -116,9 +114,9 @@ export class Graph {
 
         if (bridgeAdded) {
             this.checkWinCondition();
-            this.graphToBitboard();
         }
 
+        this.evaluate();
         this.yellowsTurn = !this.yellowsTurn;
         return true;
     }
@@ -185,9 +183,39 @@ export class Graph {
             this.gameWon = this.yellowsTurn ? State.yellow : State.red;
         }
     }
+
+    getPossibleMoves(): number[][] {
+        let possibleMoves: number[][] = [];
+        this.nodeList.forEach((node) => {
+            if (node.state != State.empty) return;
+            possibleMoves.push([node.x, node.y]);
+        });
+        return possibleMoves;
+    }
+
+    /**
+     * TODO make the score more advanced with more factors
+     * who has more connecting bridges
+     * who has a longer connection that is not yet a winning connection
+     */
+    evaluate() {
+        if (this.gameWon == State.empty) {
+            this.score = 0;
+        }
+        // the earlier the game is won, the higher the score
+        let maxValue = this.tilesAcross ** 2 - 4 + this.getPossibleMoves().length;
+        if (this.gameWon == State.yellow) {
+            this.score = maxValue;
+            return;
+        }
+        if (this.gameWon == State.red) {
+            this.score = maxValue * -1;
+            return;
+        }
+    }
 }
 
-function transpose(a: number[][], numeral: number) {
+export function transpose(a: number[][], numeral: number) {
     return Object.keys(a[0]).map(function (c: any) {
         return a.map(function (r) {
             return numeral == 10 ? r[c] : r[c].toString(numeral);

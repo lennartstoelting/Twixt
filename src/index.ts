@@ -1,10 +1,10 @@
-import { State } from "./graph";
+import { Graph, State } from "./graph";
 import Model from "./model";
 import View from "./view";
 
 /** handles all input, checks in with model and displays the result with view */
 
-var tilesAcrossDefault = 6;
+var tilesAcrossDefault = 5;
 
 class Controller {
     model: Model;
@@ -94,8 +94,9 @@ class Controller {
             this.model.undoMove() ? this.updateView() : console.log("no more positions in history array");
         });
         this.toggleGridlinesButton.addEventListener("click", () => {
-            this.showGridlines = !this.showGridlines;
-            this.updateView();
+            // this.showGridlines = !this.showGridlines;
+            // this.updateView();
+            this.model.minimaxStart(2);
         });
         this.toggleBlockadesButton.addEventListener("click", () => {
             this.showBlockades = !this.showBlockades;
