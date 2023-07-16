@@ -5,6 +5,7 @@ class View {
     ctx: any;
     boardSideLength: number;
     tileSize: number;
+    borderRadius: number;
     corners: number[];
 
     whosTurn: HTMLElement;
@@ -13,10 +14,12 @@ class View {
     constructor() {
         this.whosTurn = document.getElementById("whos-turn");
         this.boardContainer = document.getElementById("board-container");
+        this.borderRadius = 3;
     }
 
     drawBoard(graph: Graph, gridlines: boolean, blockades: boolean): void {
         this._createCanvas(graph);
+        this._drawBackground();
         if (gridlines) {
             this._drawGridlines();
         }
@@ -62,9 +65,8 @@ class View {
     private _createCanvas(graph: Graph): void {
         this.board = document.createElement("canvas");
         this.board.id = "board";
-        this.board.style.background = "blue";
         this.board.style.boxShadow = "5px 5px 20px gray";
-        this.board.style.borderRadius = "3%";
+        this.board.style.borderRadius = this.borderRadius + "%";
         this.board.style.margin = "1%";
         this.board.width = this.boardContainer.clientWidth * 0.98;
         this.board.height = this.boardContainer.clientHeight * 0.98;
@@ -74,6 +76,14 @@ class View {
         this.ctx = this.board.getContext("2d");
         this.boardSideLength = this.board.clientWidth;
         this.tileSize = this.boardSideLength / graph.matrix.length;
+    }
+
+    private _drawBackground(): void {
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "blue";
+        this.ctx.roundRect(0, 0, this.board.clientWidth, this.board.clientWidth, this.board.clientWidth * (this.borderRadius / 100));
+        this.ctx.stroke();
+        this.ctx.fill();
     }
 
     private _drawGridlines(): void {
