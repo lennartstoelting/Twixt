@@ -1,18 +1,20 @@
-export enum State {
-    empty = "black",
-    yellow = "Yellow",
-    red = "Red",
-}
+/**
+ * State as number
+ * State == 0 -> empty field
+ * State == 1 -> yellow
+ * State == 2 -> red
+ * State == 3 -> no field
+ */
 
 export class Node {
     x: number;
     y: number;
-    state: State;
+    state: number;
     edges: Node[];
     blockades: Set<Node>;
     id: number;
 
-    constructor(x: number, y: number, tilesAcross: number, state: State) {
+    constructor(x: number, y: number, tilesAcross: number, state: number) {
         this.x = x;
         this.y = y;
         this.state = state;
@@ -28,20 +30,20 @@ export class Graph {
     yellowsTurn: boolean;
     tilesAcross: number;
     nodeList: Node[];
-    gameWon: State;
+    gameWon: number;
     evaluation: number;
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.nodeList = [];
         this.yellowsTurn = yellowsTurn;
         this.tilesAcross = tilesAcross;
-        this.gameWon = State.empty;
+        this.gameWon = 0;
 
         // create all nodes in empty state
         for (let y = 0; y < tilesAcross; y++) {
             for (let x = 0; x < tilesAcross; x++) {
                 if ((x == 0 || x == tilesAcross - 1) && (y == 0 || y == tilesAcross - 1)) continue; // the corners of the playing field
-                this.nodeList.push(new Node(x, y, tilesAcross, State.empty));
+                this.nodeList.push(new Node(x, y, tilesAcross, 0));
             }
         }
     }
@@ -61,11 +63,11 @@ export class Graph {
             .map(() => Array(this.tilesAcross).fill(3));
 
         this.nodeList.forEach((node) => {
-            if (node.state == State.empty) {
+            if (node.state == 0) {
                 matrix[node.x][node.y] = 0;
                 return;
             }
-            matrix[node.x][node.y] = node.state == State.yellow ? 1 : 2;
+            matrix[node.x][node.y] = node.state == 1 ? 1 : 2;
 
             node.edges.forEach((edge) => {
                 let offsetX = edge.x - node.x;
@@ -90,9 +92,9 @@ export class Graph {
     addNode(x: number, y: number): boolean {
         let node = this.getNode(x, y);
 
-        if (node.state != State.empty) return false;
+        if (node.state != 0) return false;
 
-        node.state = this.yellowsTurn ? State.yellow : State.red;
+        node.state = this.yellowsTurn ? 1 : 2;
 
         let bridgeAdded: boolean = false;
         for (let i = 0; i < 8; i++) {
@@ -166,7 +168,7 @@ export class Graph {
         let nodeQueue = new Set<Node>();
         for (let i = 1; i < this.tilesAcross - 1; i++) {
             let startNode = this.yellowsTurn ? this.getNode(i, 0) : this.getNode(0, i);
-            if ((this.yellowsTurn && startNode.state != State.yellow) || (!this.yellowsTurn && startNode.state != State.red)) continue;
+            if ((this.yellowsTurn && startNode.state != 1) || (!this.yellowsTurn && startNode.state != 2)) continue;
             nodeQueue.add(startNode);
         }
 
@@ -182,7 +184,7 @@ export class Graph {
             });
         });
         if (connectionFound) {
-            this.gameWon = this.yellowsTurn ? State.yellow : State.red;
+            this.gameWon = this.yellowsTurn ? 1 : 2;
         }
     }
 }

@@ -1,4 +1,3 @@
-import { State } from "./graph";
 import Model from "./model";
 import View from "./view";
 
@@ -168,8 +167,8 @@ class Controller {
         if (nodePlayed) {
             this.updateView();
         }
-        if (this.model.mainGraph.gameWon != State.empty && !this.gameWonModalShown) {
-            this.winnerInfo.innerHTML = this.model.mainGraph.gameWon + " won!";
+        if (this.model.mainGraph.gameWon != 0 && !this.gameWonModalShown) {
+            this.winnerInfo.innerHTML = `${this.model.mainGraph.gameWon == 1 ? "Yellow" : "Red"} won`;
             this.gameWonModal.style.display = "block";
             this.gameWonModalShown = true;
         }

@@ -33,12 +33,12 @@ class View {
             // draw hole or pin
             this.ctx.beginPath();
             this.ctx.arc(nodeCenterX, nodeCenterY, this.tileSize / 6, 0, 2 * Math.PI);
-            this.ctx.fillStyle = node.state;
+            this.ctx.fillStyle = node.state == 1 ? "yellow" : node.state == 2 ? "red" : "black";
             this.ctx.fill();
 
             // draw bridges
             this.ctx.lineWidth = this.tileSize / 12;
-            this.ctx.strokeStyle = node.state;
+            this.ctx.strokeStyle = node.state == 1 ? "yellow" : node.state == 2 ? "red" : "black";
             node.edges.forEach((edge) => {
                 this.ctx.beginPath();
                 this.ctx.moveTo(nodeCenterX, nodeCenterY);
