@@ -2,18 +2,19 @@ import { Graph, pointInDirectionOfIndex } from "./graph";
 
 class View {
     board: any;
-    ctx: any;
-    boardSideLength: number;
     tileSize: number;
-    borderRadius: number;
-    corners: number[];
+    private boardSideLength: number;
+    private borderRadius: number;
+    private corners: number[];
 
-    whosTurn: HTMLElement;
-    boardContainer: HTMLElement;
+    private ctx: CanvasRenderingContext2D;
+
+    private whosTurn: HTMLElement;
+    private boardContainer: HTMLDivElement;
 
     constructor() {
         this.whosTurn = document.getElementById("whos-turn");
-        this.boardContainer = document.getElementById("board-container");
+        this.boardContainer = document.getElementById("board-container") as HTMLDivElement;
         this.borderRadius = 3;
     }
 
@@ -26,8 +27,8 @@ class View {
         this._drawFinishLines();
 
         graph.matrix.forEach((column, x) => {
-            column.forEach((entry, y) => {
-                if (entry == 3) return;
+            column.forEach((node, y) => {
+                if (node == 3) return;
 
                 let nodeCenterX = x * this.tileSize + this.tileSize / 2;
                 let nodeCenterY = y * this.tileSize + this.tileSize / 2;
@@ -35,13 +36,13 @@ class View {
                 // draw hole or pin
                 this.ctx.beginPath();
                 this.ctx.arc(nodeCenterX, nodeCenterY, this.tileSize / 6, 0, 2 * Math.PI);
-                this.ctx.fillStyle = this._numberToColor(entry);
+                this.ctx.fillStyle = node == 0 ? "black" : node & 1 ? "yellow" : "red";
                 this.ctx.fill();
 
                 // draw bridges
                 this.ctx.lineWidth = this.tileSize / 12;
-                this.ctx.strokeStyle = this._numberToColor(entry);
-                let bridges = entry >> graph.bridgeBitsOffset;
+                this.ctx.strokeStyle = node == 0 ? "black" : node & 1 ? "yellow" : "red";
+                let bridges = node >> graph.bridgeBitsOffset;
                 if (!bridges) return;
 
                 for (let i = 0; i < 8; i++) {
@@ -123,18 +124,6 @@ class View {
         this.ctx.moveTo(this.corners[1], this.corners[2]);
         this.ctx.lineTo(this.corners[3], this.corners[2]);
         this.ctx.stroke();
-    }
-
-    private _numberToColor(value: number): string {
-        if (value == 0) {
-            return "black";
-        }
-        if (value & 1) {
-            return "yellow";
-        }
-        if (value & 2) {
-            return "red";
-        }
     }
 }
 

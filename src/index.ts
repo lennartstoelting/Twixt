@@ -9,9 +9,9 @@ class Controller {
     model: Model;
     view: View;
 
-    showGridlines: boolean;
-    showBlockades: boolean;
-    gameWonModalShown: boolean; // has the player already seen the game won Modal and wanted to keep playing?
+    private showGridlines: boolean;
+    private showBlockades: boolean;
+    private gameWonModalShown: boolean; // has the player already seen the game won Modal and wanted to keep playing?
 
     // game-/debug-buttons
     restartGameButton: HTMLButtonElement;
@@ -44,7 +44,7 @@ class Controller {
         this._getDomElements();
         this._initEventListeners();
 
-        this.updateView();
+        this._updateView();
     }
 
     _getDomElements(): void {
@@ -82,7 +82,7 @@ class Controller {
 
     _initEventListeners(): void {
         window.addEventListener("resize", () => {
-            this.updateView();
+            this._updateView();
         });
 
         // game-/debug-buttons
@@ -90,15 +90,15 @@ class Controller {
             this.setupGameModal.style.display = "block";
         });
         this.undoMoveButton.addEventListener("click", () => {
-            this.model.undoMove() ? this.updateView() : console.log("no more positions in history array");
+            this.model.undoMove() ? this._updateView() : console.log("no more positions in history array");
         });
         this.toggleGridlinesButton.addEventListener("click", () => {
             this.showGridlines = !this.showGridlines;
-            this.updateView();
+            this._updateView();
         });
         this.toggleBlockadesButton.addEventListener("click", () => {
             this.showBlockades = !this.showBlockades;
-            this.updateView();
+            this._updateView();
         });
 
         // setup game modal
@@ -132,7 +132,7 @@ class Controller {
 
             this.setupGameModal.style.display = "none";
             this.gameWonModalShown = false;
-            this.updateView();
+            this._updateView();
         });
 
         // game won modal
@@ -150,22 +150,20 @@ class Controller {
         });
     }
 
-    updateView(): void {
+    private _updateView(): void {
         this.view.drawBoard(this.model.mainGraph, this.showGridlines, this.showBlockades);
-        this.view.board.addEventListener("click", () => this._boardClicked(event));
+        this.view.board.addEventListener("click", (event: MouseEvent) => this._boardClicked(event));
     }
 
-    _boardClicked(event: any): void {
+    private _boardClicked(event: any): void {
         let rect = this.view.board.getBoundingClientRect();
         // calculate which tile was clicked from global coordinates to matrix coordinates
         var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);
         var y = Math.floor((event.clientY - rect.top) / this.view.tileSize);
-        // the corners of the playing field
-        if ((x == 0 || x == this.model.mainGraph.matrix.length - 1) && (y == 0 || y == this.model.mainGraph.matrix.length - 1)) return;
         // console.log("clicked hole: (x: " + x + ", y: " + y + ")");
-        let nodePlayed = this.model.tryPlacingPin(x, y);
-        if (nodePlayed) {
-            this.updateView();
+
+        if (this.model.tryPlayingNode(x, y)) {
+            this._updateView();
         }
         if (this.model.mainGraph.gameWon != 0 && !this.gameWonModalShown) {
             this.winnerInfo.innerHTML = `${this.model.mainGraph.gameWon == 1 ? "Yellow" : "Red"} won`;

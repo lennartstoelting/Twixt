@@ -1,35 +1,16 @@
-// export class Node {
-//     x: number;
-//     y: number;
-//     state: number;
-//     edges: Node[];
-//     blockades: Set<Node>;
-//     id: number;
-
-//     constructor(x: number, y: number, tilesAcross: number, state: number) {
-//         this.x = x;
-//         this.y = y;
-//         this.state = state;
-//         this.edges = [];
-//         this.blockades = new Set<Node>();
-//         this.id = y * tilesAcross + x;
-//     }
-// }
-
-// -------------------------------------------------
-
 /**
  * for understanding the bitwise operations
  * https://www.w3schools.com/js/js_bitwise.asp
  */
 
 export class Graph {
+    matrix: number[][];
+
     yellowsTurn: boolean;
     gameWon: number;
     evaluation: number;
 
     bridgeBitsOffset: number;
-    matrix: number[][];
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.yellowsTurn = yellowsTurn;
@@ -52,12 +33,9 @@ export class Graph {
         return clonedGraph;
     }
 
-    /**
-     * adding nodes and checking for intersections follows the pattern
-     * nodeA = coords of the original node to be added
-     *
-     */
-    addNode(nodeA: number[]): boolean {
+    // maybe needs to be rewirtten because the nodes are already existing in the matrix, it's more like playing a move
+    // maybe makeMove ?
+    playNode(nodeA: number[]): boolean {
         // if it's an empty hole, place a pin
         if (this.matrix[nodeA[0]][nodeA[1]] != 0) return false;
         this.matrix[nodeA[0]][nodeA[1]] = this.yellowsTurn ? 1 : 2;
@@ -77,7 +55,7 @@ export class Graph {
                 continue;
             }
 
-            if (this.checkForBlockades(nodeA, nodeB)) continue;
+            if (this._checkForBlockades(nodeA, nodeB)) continue;
             // add edge in both directions
             this.matrix[nodeA[0]][nodeA[1]] |= (2 ** directionIndex) << 2;
             let otherDirection = directionIndex & 1 ? (directionIndex + 3) % 8 : (directionIndex + 5) % 8;
@@ -86,45 +64,48 @@ export class Graph {
         }
 
         if (bridgeAdded) {
-            this.checkWinCondition();
+            this._checkWinCondition();
         }
 
         this.yellowsTurn = !this.yellowsTurn;
         return true;
     }
 
-    checkForBlockades(nodeA: any, nodeB: any): boolean {
+    private _checkForBlockades(nodeA: any, nodeB: any): boolean {
         // establish the bounding rectangle that contains the bridge connection
         let topLeftX = Math.min(nodeA[0], nodeB[0]);
         let topLeftY = Math.min(nodeA[1], nodeB[1]);
         let bottomRightX = Math.max(nodeA[0], nodeB[0]);
         let bottomRightY = Math.max(nodeA[1], nodeB[1]);
 
-        // go over the 6 nodes in the rectangle, skipping the ones the original bridge is connecting
+        // collect the 4 nodes in the rectangle, skipping the ones the original bridge is connecting
+        let rectNodes: number[][] = [];
         for (let rectY = topLeftY; rectY <= bottomRightY; rectY++) {
             for (let rectX = topLeftX; rectX <= bottomRightX; rectX++) {
                 if ((rectX == nodeA[0] && rectY == nodeA[1]) || (rectX == nodeB[0] && rectY == nodeB[1])) continue;
-
-                // only check the nodes that have bridges
-                let bridges = this.matrix[rectX][rectY] >> this.bridgeBitsOffset;
-                if (!bridges) continue;
-
-                // go over each bridge and check for intersection with the original one
-                for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
-                    if (!(bridges & (2 ** directionIndex))) continue;
-
-                    let outsideRect = pointInDirectionOfIndex(rectX, rectY, directionIndex);
-                    if (intersects(nodeA[0], nodeA[1], nodeB[0], nodeB[1], rectX, rectY, outsideRect[0], outsideRect[1])) {
-                        return true;
-                    }
-                }
+                rectNodes.push([rectX, rectY]);
             }
         }
 
-        return false;
+        // for the 4 Nodes, see if any of them have an intersecting bridge
+        return rectNodes.some((rectNode) => {
+            // only check the nodes that have bridges
+            let bridges = this.matrix[rectNode[0]][rectNode[1]] >> this.bridgeBitsOffset;
+            if (!bridges) return false;
+
+            // go over each bridge and check for intersection with the original one
+            for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+                if (!(bridges & (2 ** directionIndex))) continue;
+
+                let outsideRectNode = pointInDirectionOfIndex(rectNode[0], rectNode[1], directionIndex);
+                if (intersects(nodeA[0], nodeA[1], nodeB[0], nodeB[1], rectNode[0], rectNode[1], outsideRectNode[0], outsideRectNode[1])) {
+                    return true;
+                }
+            }
+        });
     }
 
-    checkWinCondition(): void {
+    private _checkWinCondition(): void {
         // because of the weird behaviour of sets, it will get the id of a node instead of the coordinates
         // let id = x + y * tilesAcross;
         let nodeIdQueue = new Set<number>();
@@ -144,6 +125,7 @@ export class Graph {
         if (nodeIdQueue.size == 0) return;
 
         let connectionFound: boolean = false;
+
         nodeIdQueue.forEach((nodeId) => {
             if (connectionFound) return;
 
@@ -157,7 +139,7 @@ export class Graph {
                 return;
             }
 
-            // check if current node in stack has mor nodes connected
+            // check if current node in stack has more nodes connected
             let bridges = this.matrix[x][y] >> this.bridgeBitsOffset;
             if (!bridges) return;
 
@@ -167,14 +149,13 @@ export class Graph {
                 nodeIdQueue.add(next[0] + next[1] * this.matrix.length);
             }
         });
-        if (connectionFound) {
-            this.gameWon = this.yellowsTurn ? 1 : 2;
-        }
+
+        if (!connectionFound) return;
+        this.gameWon = this.yellowsTurn ? 1 : 2;
     }
 }
 
 // gets a directionIndex between 0 and 7 and returns the corresponding x and y direction
-// TODO everywhere this function gets called, it's within a loop. Analyzing those and putting them in here could bundle some functionality better
 export function pointInDirectionOfIndex(x: number, y: number, directionIndex: number): number[] {
     let newX = (directionIndex & 2 ? 1 : 2) * (directionIndex & 4 ? -1 : 1);
     let newY = (directionIndex & 2 ? 2 : 1) * (directionIndex & 1 ? -1 : 1);

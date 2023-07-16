@@ -17,9 +17,9 @@ class Model {
         this.redAI = redAI;
     }
 
-    tryPlacingPin(x: number, y: number): boolean {
+    tryPlayingNode(x: number, y: number): boolean {
         let currGraph = this.mainGraph.clone();
-        let pinPlaced = this.mainGraph.addNode([x, y]);
+        let pinPlaced = this.mainGraph.playNode([x, y]);
         if (!pinPlaced) return false;
         this.history.push(currGraph);
         return true;
