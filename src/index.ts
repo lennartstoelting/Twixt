@@ -11,7 +11,7 @@ class Controller {
 
     private showGridlines: boolean;
     private showBlockades: boolean;
-    private gameWonModalShown: boolean; // has the player already seen the game won Modal and wanted to keep playing?
+    private gameOverModalShown: boolean; // has the player already seen the game won Modal and wanted to keep playing?
 
     // game-/debug-buttons
     restartGameButton: HTMLButtonElement;
@@ -31,9 +31,9 @@ class Controller {
     startButton: HTMLInputElement;
 
     // game won modal
-    gameWonModal: HTMLElement;
-    gameWonModalCloseButton: HTMLElement;
-    winnerInfo: HTMLElement;
+    gameOverModal: HTMLElement;
+    gameOverModalCloseButton: HTMLElement;
+    gameOverInfo: HTMLElement;
     restartGameAgainButton: HTMLButtonElement;
     keepPlayingButton: HTMLButtonElement;
 
@@ -73,9 +73,9 @@ class Controller {
         this.boardSizeLabel.innerHTML = `${tilesAcrossDefault}x${tilesAcrossDefault}`;
 
         // game won modal
-        this.gameWonModal = document.getElementById("game-won-modal");
-        this.gameWonModalCloseButton = document.getElementsByClassName("modal-close")[1] as HTMLElement;
-        this.winnerInfo = document.getElementById("winner-info");
+        this.gameOverModal = document.getElementById("game-over-modal");
+        this.gameOverModalCloseButton = document.getElementsByClassName("modal-close")[1] as HTMLElement;
+        this.gameOverInfo = document.getElementById("game-over-info");
         this.restartGameAgainButton = document.getElementById("restart-game-again") as HTMLButtonElement;
         this.keepPlayingButton = document.getElementById("keep-playing") as HTMLButtonElement;
     }
@@ -131,22 +131,22 @@ class Controller {
             );
 
             this.setupGameModal.style.display = "none";
-            this.gameWonModalShown = false;
+            this.gameOverModalShown = false;
             this._updateView();
         });
 
         // game won modal
-        this.gameWonModalCloseButton.addEventListener("click", () => {
-            this.gameWonModal.style.display = "none";
-            this.gameWonModalShown = true;
+        this.gameOverModalCloseButton.addEventListener("click", () => {
+            this.gameOverModal.style.display = "none";
+            this.gameOverModalShown = true;
         });
         this.restartGameAgainButton.addEventListener("click", () => {
-            this.gameWonModal.style.display = "none";
+            this.gameOverModal.style.display = "none";
             this.setupGameModal.style.display = "block";
         });
         this.keepPlayingButton.addEventListener("click", () => {
-            this.gameWonModal.style.display = "none";
-            this.gameWonModalShown = true;
+            this.gameOverModal.style.display = "none";
+            this.gameOverModalShown = true;
         });
     }
 
@@ -165,11 +165,19 @@ class Controller {
         if (this.model.tryPlayingNode(x, y)) {
             this._updateView();
         }
-        if (this.model.mainGraph.gameWon != 0 && !this.gameWonModalShown) {
-            this.winnerInfo.innerHTML = `${this.model.mainGraph.gameWon == 1 ? "Yellow" : "Red"} won`;
-            this.gameWonModal.style.display = "block";
-            this.gameWonModalShown = true;
+        if (this.model.mainGraph.gameOver == 0 || this.gameOverModalShown) return;
+
+        if (this.model.mainGraph.gameOver == 1) {
+            this.gameOverInfo.innerHTML = `Yellow won`;
         }
+        if (this.model.mainGraph.gameOver == 2) {
+            this.gameOverInfo.innerHTML = `Red won`;
+        }
+        if (this.model.mainGraph.gameOver == 12) {
+            this.gameOverInfo.innerHTML = `Nobody can win anymore`;
+        }
+        this.gameOverModal.style.display = "block";
+        this.gameOverModalShown = true;
     }
 }
 

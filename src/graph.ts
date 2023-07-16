@@ -7,15 +7,16 @@ export class Graph {
     matrix: number[][];
 
     yellowsTurn: boolean;
-    gameWon: number;
+    gameOver: number; // yellow won = 1, red won = 2, yellow got cut off = 4, red got cut off = 8 (not yet final)
     evaluation: number;
 
     bridgeBitsOffset: number;
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.yellowsTurn = yellowsTurn;
-        this.gameWon = 0;
+        this.gameOver = 0;
         this.bridgeBitsOffset = 2;
+
         this.matrix = Array(tilesAcross)
             .fill(0)
             .map(() => Array(tilesAcross).fill(0));
@@ -121,11 +122,9 @@ export class Graph {
                 }
             }
         }
-
         if (nodeIdQueue.size == 0) return;
 
         let connectionFound: boolean = false;
-
         nodeIdQueue.forEach((nodeId) => {
             if (connectionFound) return;
 
@@ -137,6 +136,15 @@ export class Graph {
             if ((this.yellowsTurn && y == this.matrix.length - 1) || (!this.yellowsTurn && x == this.matrix.length - 1)) {
                 connectionFound = true;
                 return;
+            }
+
+            // check if the opponent has been cut off
+            // still some bugs left
+            if (this.yellowsTurn && y == this.matrix.length - 2 && (x == 0 || this.matrix.length - 1)) {
+                console.log("Rot kann nicht mehr gewinnen");
+            }
+            if (!this.yellowsTurn && x == this.matrix.length - 2 && (y == 0 || this.matrix.length - 1)) {
+                console.log("Gelb kann nicht mehr gewinnen");
             }
 
             // check if current node in stack has more nodes connected
@@ -151,7 +159,7 @@ export class Graph {
         });
 
         if (!connectionFound) return;
-        this.gameWon = this.yellowsTurn ? 1 : 2;
+        this.gameOver |= this.yellowsTurn ? 1 : 2;
     }
 }
 
