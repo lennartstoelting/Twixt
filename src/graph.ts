@@ -127,8 +127,8 @@ export class Graph {
     checkWinCondition(): void {
         // because of the weird behaviour of sets, it will get the id of a node instead of the coordinates
         // let id = x + y * tilesAcross;
-
         let nodeIdQueue = new Set<number>();
+
         for (let i = 1; i < this.matrix.length - 1; i++) {
             if (this.yellowsTurn) {
                 if ((this.matrix[i][0] & 3) == 1) {
@@ -136,44 +136,45 @@ export class Graph {
                 }
             } else {
                 if ((this.matrix[0][i] & 3) == 2) {
-                    nodeIdQueue.add(0 + 1 * this.matrix.length);
+                    nodeIdQueue.add(0 + i * this.matrix.length);
                 }
             }
         }
 
-        let connectionFound: boolean = false;
+        if (nodeIdQueue.size == 0) return;
 
+        let connectionFound: boolean = false;
         nodeIdQueue.forEach((nodeId) => {
             if (connectionFound) return;
 
             // translate id to coords
-            let x = Math.floor(nodeId / this.matrix.length);
-            let y = nodeId % this.matrix.length;
+            let x = nodeId % this.matrix.length;
+            let y = Math.floor(nodeId / this.matrix.length);
 
             // check if the other side has been reached
-            if ((this.yellowsTurn && x == this.matrix.length - 1) || (!this.yellowsTurn && y == this.matrix.length - 1)) {
+            if ((this.yellowsTurn && y == this.matrix.length - 1) || (!this.yellowsTurn && x == this.matrix.length - 1)) {
                 connectionFound = true;
                 return;
             }
 
             // check if current node in stack has mor nodes connected
-            let bridges = this.matrix[y][x] >> this.bridgeBitsOffset;
+            let bridges = this.matrix[x][y] >> this.bridgeBitsOffset;
             if (!bridges) return;
 
             for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
                 if (!(bridges & (2 ** directionIndex))) continue;
-                let next = pointInDirectionOfIndex(y, x, directionIndex);
-                nodeIdQueue.add(next[0] + next[y] * this.matrix.length);
-            }
-
-            if (connectionFound) {
-                this.gameWon = this.yellowsTurn ? 1 : 2;
+                let next = pointInDirectionOfIndex(x, y, directionIndex);
+                nodeIdQueue.add(next[0] + next[1] * this.matrix.length);
             }
         });
+        if (connectionFound) {
+            this.gameWon = this.yellowsTurn ? 1 : 2;
+        }
     }
 }
 
 // gets a directionIndex between 0 and 7 and returns the corresponding x and y direction
+// TODO everywhere this function gets called, it's within a loop. Analyzing those and putting them in here could bundle some functionality better
 export function pointInDirectionOfIndex(x: number, y: number, directionIndex: number): number[] {
     let newX = (directionIndex & 2 ? 1 : 2) * (directionIndex & 4 ? -1 : 1);
     let newY = (directionIndex & 2 ? 2 : 1) * (directionIndex & 1 ? -1 : 1);
