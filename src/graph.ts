@@ -47,7 +47,6 @@ export class Graph {
         this.matrix[nodeA[0]][nodeA[1]] = this.yellowsTurn ? 1 : 2;
 
         // now check for bridges in all directions
-        let bridgeAdded: boolean = false; // to know if the win condition needs to be cheked
         for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
             let nodeB = pointInDirectionOfIndex(nodeA[0], nodeA[1], directionIndex);
 
@@ -66,7 +65,6 @@ export class Graph {
             this.matrix[nodeA[0]][nodeA[1]] |= (2 ** directionIndex) << 2;
             let otherDirection = directionIndex & 1 ? (directionIndex + 3) % 8 : (directionIndex + 5) % 8;
             this.matrix[nodeB[0]][nodeB[1]] |= (2 ** otherDirection) << 2;
-            bridgeAdded = true;
         }
 
         this._checkGameOver();
@@ -152,13 +150,22 @@ export class Graph {
          * [matrix.length - 2, 0] bzw. [matrix.length - 2, matrix.length - 1]
          */
 
-        // das bedient bisher noch nicht alle fälle, da es auch wieder nur in eine Richtung geht.
-        // man müsste also den check danach, ob die andere Seite erreicht wurde und den nach der Suche nach cutoffs, da bisher nur die oben nach undten Seite überprüft, ob das Spiel gewonnen wurde
-        // könnte auch so umgeschrieben werden das die gesamte Funktion ausschließlich cutoffs berechnet um im nachhinein schaut man, ob auch eine winning connection dabei ist.
-        // das set speichert ja die Ids, die umgerechnet die Koordinate ergeben. findet man also sowohl einen Punkt auf der einen Seite sowie einen auf der anderen muss es dazwischen eine Verbindung gegeben haben.
-        // dabei muss man natürlich weiterhin zwei Queues machen (sowieso für die cutoff checks), sonst würde die Vermischung eventuell ein pin auf jeder seite haben aber nur weil wirs so initialisiert haben,
-        // nicht weil die eine actual verbindung haben
+        /**
+         * das bedient bisher noch nicht alle fälle, da es auch wieder nur in eine Richtung geht.
+         * man müsste also den check danach, ob die andere Seite erreicht wurde und den nach der Suche nach cutoffs,
+         * da bisher nur die oben nach undten Seite überprüft, ob das Spiel gewonnen wurde
+         * könnte auch so umgeschrieben werden das die gesamte Funktion ausschließlich cutoffs berechnet um im nachhinein schaut man,
+         * ob auch eine winning connection dabei ist.
+         * das set speichert ja die Ids, die umgerechnet die Koordinate ergeben.
+         * Findet man also sowohl einen Punkt auf der einen Seite sowie einen auf der anderen
+         * (in beiden Sets die Gleichen wegen potentieller Fehler aufgrund der hervorstehenden Eckpunkte)
+         * muss es dazwischen eine Verbindung gegeben haben.
+         * dabei muss man natürlich weiterhin zwei Queues machen (sowieso für die cutoff checks), sonst würde die Vermischung eventuell ein pin auf jeder seite haben aber nur weil wirs so initialisiert haben,
+         * nicht weil die eine actual verbindung haben
+         * und man muss alle startpins beachte, auch die die keine Brücke haben (wegen dieser komischen Eckpins)
+         */
 
+        // die könnte man dann bei dem neuen/anderen ansatz auch mit in den Loop reinnehmen anstatt sie hier so zimperlich einzeln hinzuzufügen
         // the edges behing the enemy finish line
         if (this.yellowsTurn) {
             if ((this.matrix[0][this.matrix.length - 2] & 3) == 1) otherSideNodeIdQueue.add((this.matrix.length - 2) * this.matrix.length);
