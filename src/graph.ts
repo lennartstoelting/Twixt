@@ -7,7 +7,12 @@ export class Graph {
     matrix: number[][];
 
     yellowsTurn: boolean;
-    gameOver: number; // yellow won = 1, red won = 2, yellow got cut off = 4, red got cut off = 8 (not yet final)
+    /**
+     * 0th bit = (yellow can't win), 1st bit = (red can't win), 2nd bit = (yellow won), 3rd bit = (red won)
+     * we add to this score by doing an or operation so that the game is over when this score is 3 or higher
+     * 3 means either party can't win, 4 means yellow won and 8 means red won
+     */
+    gameOver: number;
     evaluation: number;
 
     bridgeBitsOffset: number;
@@ -64,9 +69,8 @@ export class Graph {
             bridgeAdded = true;
         }
 
-        if (bridgeAdded) {
-            this._checkWinCondition();
-        }
+        this._checkGameOver();
+        console.log(this.gameOver);
 
         this.yellowsTurn = !this.yellowsTurn;
         return true;
@@ -106,7 +110,7 @@ export class Graph {
         });
     }
 
-    private _checkWinCondition(): void {
+    private _checkGameOver(): void {
         // because of the weird behaviour of sets, it will get the id of a node instead of the coordinates
         // let id = x + y * tilesAcross;
         let nodeIdQueue = new Set<number>();
@@ -139,12 +143,21 @@ export class Graph {
             }
 
             // check if the opponent has been cut off
-            // still some bugs left
-            if (this.yellowsTurn && y == this.matrix.length - 2 && (x == 0 || this.matrix.length - 1)) {
-                console.log("Rot kann nicht mehr gewinnen");
+            if (this.yellowsTurn && this.gameOver | 2 && (x == 0 || x == this.matrix.length - 1)) {
+                this.gameOver |= 2;
+                for (let nextY = y + 1; nextY <= this.matrix.length - 2; nextY++) {
+                    if (!(this.matrix[x][nextY] & 1)) {
+                        this.gameOver &= ~2;
+                    }
+                }
             }
-            if (!this.yellowsTurn && x == this.matrix.length - 2 && (y == 0 || this.matrix.length - 1)) {
-                console.log("Gelb kann nicht mehr gewinnen");
+            if (!this.yellowsTurn && this.gameOver | 1 && (y == 0 || y == this.matrix.length - 1)) {
+                this.gameOver |= 1;
+                for (let nextX = x + 1; nextX <= this.matrix.length - 2; nextX++) {
+                    if (!(this.matrix[nextX][y] & 2)) {
+                        this.gameOver &= ~1;
+                    }
+                }
             }
 
             // check if current node in stack has more nodes connected
@@ -159,7 +172,7 @@ export class Graph {
         });
 
         if (!connectionFound) return;
-        this.gameOver |= this.yellowsTurn ? 1 : 2;
+        this.gameOver |= this.yellowsTurn ? 4 : 8;
     }
 }
 

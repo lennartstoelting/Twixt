@@ -165,15 +165,15 @@ class Controller {
         if (this.model.tryPlayingNode(x, y)) {
             this._updateView();
         }
-        if (this.model.mainGraph.gameOver == 0 || this.gameOverModalShown) return;
+        if (this.model.mainGraph.gameOver < 3 || this.gameOverModalShown) return;
 
-        if (this.model.mainGraph.gameOver == 1) {
+        if (this.model.mainGraph.gameOver & 4) {
             this.gameOverInfo.innerHTML = `Yellow won`;
         }
-        if (this.model.mainGraph.gameOver == 2) {
+        if (this.model.mainGraph.gameOver & 8) {
             this.gameOverInfo.innerHTML = `Red won`;
         }
-        if (this.model.mainGraph.gameOver == 12) {
+        if (this.model.mainGraph.gameOver & 3) {
             this.gameOverInfo.innerHTML = `Nobody can win anymore`;
         }
         this.gameOverModal.style.display = "block";
