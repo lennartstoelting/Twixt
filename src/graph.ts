@@ -130,15 +130,19 @@ export class Graph {
 
         let connectionFound: boolean = false;
         nodeIdQueue.forEach((nodeId) => {
-            if (connectionFound) return;
+            if (this.gameOver > 2) return;
 
             // translate id to coords
             let x = nodeId % this.matrix.length;
             let y = Math.floor(nodeId / this.matrix.length);
 
             // check if the other side has been reached
-            if ((this.yellowsTurn && y == this.matrix.length - 1) || (!this.yellowsTurn && x == this.matrix.length - 1)) {
-                connectionFound = true;
+            if (this.yellowsTurn && y == this.matrix.length - 1) {
+                this.gameOver |= 4;
+                return;
+            }
+            if (!this.yellowsTurn && x == this.matrix.length - 1) {
+                this.gameOver |= 8;
                 return;
             }
 
@@ -170,9 +174,6 @@ export class Graph {
                 nodeIdQueue.add(next[0] + next[1] * this.matrix.length);
             }
         });
-
-        if (!connectionFound) return;
-        this.gameOver |= this.yellowsTurn ? 4 : 8;
     }
 }
 

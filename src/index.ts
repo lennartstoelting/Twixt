@@ -173,7 +173,7 @@ class Controller {
         if (this.model.mainGraph.gameOver & 8) {
             this.gameOverInfo.innerHTML = `Red won`;
         }
-        if (this.model.mainGraph.gameOver & 3) {
+        if (this.model.mainGraph.gameOver == 3) {
             this.gameOverInfo.innerHTML = `Nobody can win anymore`;
         }
         this.gameOverModal.style.display = "block";
