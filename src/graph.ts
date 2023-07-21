@@ -2,13 +2,17 @@
 
 /**
  * gameOver: 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
+ * ConnectedNodesQueue: all ids of nodes behind starting line with all their connections into the playing field
+ *      id = x + y * tilesAcross
  */
 export class Graph {
     matrix: number[][];
+    yellowsConnectedNodesQueue: Set<number>;
+    redsConnectedNodesQueue: Set<number>;
 
     yellowsTurn: boolean;
     gameOver: number;
-    evaluation: number;
+    // evaluation: number;
 
     bridgeBitsOffset: number;
 
@@ -16,6 +20,8 @@ export class Graph {
         this.yellowsTurn = yellowsTurn;
         this.gameOver = 0;
         this.bridgeBitsOffset = 2;
+        this.yellowsConnectedNodesQueue = new Set<number>();
+        this.redsConnectedNodesQueue = new Set<number>();
 
         this.matrix = Array(tilesAcross)
             .fill(0)
@@ -34,14 +40,12 @@ export class Graph {
         return clonedGraph;
     }
 
-    // maybe needs to be rewirtten because the nodes are already existing in the matrix, it's more like playing a move
-    // maybe makeMove ?
     playNode(nodeA: number[]): boolean {
         // if it's an empty hole, place a pin
         if (this.matrix[nodeA[0]][nodeA[1]] != 0) return false;
         this.matrix[nodeA[0]][nodeA[1]] = this.yellowsTurn ? 1 : 2;
 
-        // now check for bridges in all directions
+        // check for bridges in all directions
         for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
             let nodeB = pointInDirectionOfIndex(nodeA[0], nodeA[1], directionIndex);
 
@@ -105,9 +109,8 @@ export class Graph {
 
     // gameOver : 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
     private _checkGameOver(): void {
-        // nodeIdQueue is a set of ids: id = x + y * tilesAcross
-        let nodeIdQueue = this._createEdgeNodesQueue();
-        nodeIdQueue.forEach((nodeId) => {
+        this._updateNodesQueue();
+        (this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue).forEach((nodeId) => {
             if (this.gameOver > 2) return;
 
             // translate id to coords
@@ -124,7 +127,7 @@ export class Graph {
                 return;
             }
 
-            this._nextNodesForSet(x, y, nodeIdQueue);
+            this._nextNodesForSet(x, y, this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
         });
 
         // if game already won or cutoff already detected, no need to check anymore
@@ -132,14 +135,14 @@ export class Graph {
         if (this.yellowsTurn && this.gameOver == 2) return;
         if (!this.yellowsTurn && this.gameOver == 1) return;
 
-        this._addFlankingNodes(nodeIdQueue, 0);
-        this._addFlankingNodes(nodeIdQueue, this.matrix.length - 1);
+        // this could potentially be turned into two class variables too
+        let cutOffNodeIdQueue = new Set(this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
 
-        // (this.yellowsTurn ? nodeIdQueue : new Set<number>()).forEach((nodeId) => {
-        //     console.log(nodeId);
-        // });
+        let nodeAdded = false;
+        nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, 0);
+        nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1) ? true : nodeAdded;
 
-        nodeIdQueue.forEach((nodeId) => {
+        cutOffNodeIdQueue.forEach((nodeId) => {
             if (this.gameOver > 2) return;
 
             // translate id to coords
@@ -158,27 +161,22 @@ export class Graph {
                 return;
             }
 
-            this._nextNodesForSet(x, y, nodeIdQueue);
+            if (nodeAdded) this._nextNodesForSet(x, y, cutOffNodeIdQueue);
         });
     }
 
     /**
-     *
      * @returns Set of Ids of all the Nodes behind the starting line
      */
-    private _createEdgeNodesQueue(): Set<number> {
-        let idQueue = new Set<number>();
-
+    private _updateNodesQueue() {
         for (let i = 1; i < this.matrix.length - 1; i++) {
             if (this.yellowsTurn && (this.matrix[i][0] & 3) == 1 && this.matrix[i][0] > 3) {
-                idQueue.add(i + 0 * this.matrix.length);
+                this.yellowsConnectedNodesQueue.add(i + 0 * this.matrix.length);
             }
             if (!this.yellowsTurn && (this.matrix[0][i] & 3) == 2 && this.matrix[0][i] > 3) {
-                idQueue.add(0 + i * this.matrix.length);
+                this.redsConnectedNodesQueue.add(0 + i * this.matrix.length);
             }
         }
-
-        return idQueue;
     }
 
     /**
@@ -199,16 +197,22 @@ export class Graph {
     /**
      * for cutoff detection we incorporate the nodes on either edge
      */
-    private _addFlankingNodes(idQueue: Set<number>, side: number): void {
+    private _addFlankingNodes(idQueue: Set<number>, side: number): boolean {
+        let nodeAdded = false;
         for (let i = 1; i < this.matrix.length - 1; i++) {
             if (this.yellowsTurn) {
-                if ((this.matrix[side][i] & 3) == 1) idQueue.add(side + i * this.matrix.length);
-                else return;
+                if (!((this.matrix[side][i] & 3) == 1)) {
+                    break;
+                }
+                idQueue.add(side + i * this.matrix.length);
+                nodeAdded = true;
             } else {
-                if ((this.matrix[i][side] & 3) == 2) idQueue.add(i + side * this.matrix.length);
-                else return;
+                if (!((this.matrix[i][side] & 3) == 2)) break;
+                idQueue.add(i + side * this.matrix.length);
+                nodeAdded = true;
             }
         }
+        return nodeAdded;
     }
 
     /**
