@@ -1,17 +1,12 @@
-/**
- * for understanding the bitwise operations
- * https://www.w3schools.com/js/js_bitwise.asp
- */
+// for understanding the bitwise operations: https://www.w3schools.com/js/js_bitwise.asp
 
+/**
+ * gameOver: 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
+ */
 export class Graph {
     matrix: number[][];
 
     yellowsTurn: boolean;
-    /**
-     * 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
-     * we add to this score by doing an or operation so that the game is over when this score is 3 or higher
-     * 3 means either party can't win, 4 means yellow won and 8 means red won
-     */
     gameOver: number;
     evaluation: number;
 
@@ -108,17 +103,10 @@ export class Graph {
         });
     }
 
+    // gameOver : 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
     private _checkGameOver(): void {
-        // because of the weird behaviour of sets, it will get the id of a node instead of the coordinates
-        // let id = x + y * tilesAcross;
-
-        // this could be made into a class wide variable that saves the connected nodes so we don't need to fetch every single one again.
-        // it does need to go over the starting row again to check if any new ones have been added in the starting row
-        let nodeIdQueue = this._createEdgeNodesQueue(0);
-        let otherSideNodeIdQueue = this._createEdgeNodesQueue(this.matrix.length - 1);
-
-        // gameWon : 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
-
+        // nodeIdQueue is a set of ids: id = x + y * tilesAcross
+        let nodeIdQueue = this._createEdgeNodesQueue();
         nodeIdQueue.forEach((nodeId) => {
             if (this.gameOver > 2) return;
 
@@ -136,99 +124,66 @@ export class Graph {
                 return;
             }
 
-            this._checkCutOff(x, y, y + 1, x + 1, this.matrix.length - 2, this.matrix.length - 2);
-
             this._nextNodesForSet(x, y, nodeIdQueue);
         });
 
-        // hier noch diese Ecken einfügen, dann sollte sogar die weirde Situation mit dem cutoff abgedeckt sein, wenn man die falsche Seite entlang läuft
-        // add zur othersideNodeQueueId
-        //
-        /** wenn gelb an der Reihe ist, dann muss man noch hinzufügen, sollten die Stellen gelb sein
-         * [0, matrix.length - 2] bzw. [matrix.length - 1, matrix.length - 2]
-         * wenn rot an der Reihe ist, dann muss man noch hinzufügen
-         * [matrix.length - 2, 0] bzw. [matrix.length - 2, matrix.length - 1]
-         */
+        // if game already won or cutoff already detected, no need to check anymore
+        if (this.gameOver > 2) return;
+        if (this.yellowsTurn && this.gameOver == 2) return;
+        if (!this.yellowsTurn && this.gameOver == 1) return;
 
-        /**
-         * das bedient bisher noch nicht alle fälle, da es auch wieder nur in eine Richtung geht.
-         * man müsste also den check danach, ob die andere Seite erreicht wurde und den nach der Suche nach cutoffs,
-         * da bisher nur die oben nach undten Seite überprüft, ob das Spiel gewonnen wurde
-         * könnte auch so umgeschrieben werden das die gesamte Funktion ausschließlich cutoffs berechnet um im nachhinein schaut man,
-         * ob auch eine winning connection dabei ist.
-         * das set speichert ja die Ids, die umgerechnet die Koordinate ergeben.
-         * Findet man also sowohl einen Punkt auf der einen Seite sowie einen auf der anderen
-         * (in beiden Sets die Gleichen wegen potentieller Fehler aufgrund der hervorstehenden Eckpunkte)
-         * muss es dazwischen eine Verbindung gegeben haben.
-         * dabei muss man natürlich weiterhin zwei Queues machen (sowieso für die cutoff checks), sonst würde die Vermischung eventuell ein pin auf jeder seite haben aber nur weil wirs so initialisiert haben,
-         * nicht weil die eine actual verbindung haben
-         * und man muss alle startpins beachte, auch die die keine Brücke haben (wegen dieser komischen Eckpins)
-         */
+        this._addFlankingNodes(nodeIdQueue, 0);
+        this._addFlankingNodes(nodeIdQueue, this.matrix.length - 1);
 
-        // die könnte man dann bei dem neuen/anderen ansatz auch mit in den Loop reinnehmen anstatt sie hier so zimperlich einzeln hinzuzufügen
-        // the edges behing the enemy finish line
-        if (this.yellowsTurn) {
-            if ((this.matrix[0][this.matrix.length - 2] & 3) == 1) otherSideNodeIdQueue.add((this.matrix.length - 2) * this.matrix.length);
-            if ((this.matrix[this.matrix.length - 1][this.matrix.length - 2] & 3) == 1)
-                otherSideNodeIdQueue.add(this.matrix.length - 1 + (this.matrix.length - 2) * this.matrix.length);
-        } else {
-            if ((this.matrix[this.matrix.length - 2][0] & 3) == 2) otherSideNodeIdQueue.add(this.matrix.length - 2);
-            if ((this.matrix[this.matrix.length - 2][this.matrix.length - 1] & 3) == 2)
-                otherSideNodeIdQueue.add(this.matrix.length - 2 + (this.matrix.length - 1) * this.matrix.length);
-        }
-        otherSideNodeIdQueue.forEach((nodeId) => {
+        // (this.yellowsTurn ? nodeIdQueue : new Set<number>()).forEach((nodeId) => {
+        //     console.log(nodeId);
+        // });
+
+        nodeIdQueue.forEach((nodeId) => {
             if (this.gameOver > 2) return;
 
             // translate id to coords
             let x = nodeId % this.matrix.length;
             let y = Math.floor(nodeId / this.matrix.length);
 
-            this._checkCutOff(x, y, 1, 1, y - 1, x - 1);
+            this._checkCutOff(x, y);
 
-            this._nextNodesForSet(x, y, otherSideNodeIdQueue);
+            // check if from the left and right the other side has been reached
+            if (this.yellowsTurn && y == this.matrix.length - 1) {
+                this.gameOver |= 2;
+                return;
+            }
+            if (!this.yellowsTurn && x == this.matrix.length - 1) {
+                this.gameOver |= 1;
+                return;
+            }
+
+            this._nextNodesForSet(x, y, nodeIdQueue);
         });
     }
 
-    private _createEdgeNodesQueue(edge: number): Set<number> {
-        let IdQueue = new Set<number>();
-
-        // hier kann man noch die Fälle ausschließen, bei denen zwar im startloch die richtige Farbe ist aber sie eh keine Brücke hat
-        // von von der Startloch pin keine Brücke ausgeht müssen wir sie gar nicht zur NodeQueue hinzufügen
-
-        // sollte ich cutoff check und winning connection check aufspalten muss das aber doch überprüft werden für den extremfall das einfach die gesamte Kante mit einzelnen pins beladen ist
+    /**
+     *
+     * @returns Set of Ids of all the Nodes behind the starting line
+     */
+    private _createEdgeNodesQueue(): Set<number> {
+        let idQueue = new Set<number>();
 
         for (let i = 1; i < this.matrix.length - 1; i++) {
-            if (this.yellowsTurn && (this.matrix[i][edge] & 3) == 1) {
-                IdQueue.add(i + edge * this.matrix.length);
+            if (this.yellowsTurn && (this.matrix[i][0] & 3) == 1 && this.matrix[i][0] > 3) {
+                idQueue.add(i + 0 * this.matrix.length);
             }
-            if (!this.yellowsTurn && (this.matrix[edge][i] & 3) == 2) {
-                IdQueue.add(edge + i * this.matrix.length);
-            }
-        }
-
-        return IdQueue;
-    }
-
-    private _checkCutOff(x: number, y: number, fromY: number, fromX: number, toY: number, toX: number): void {
-        if (this.yellowsTurn && !(this.gameOver & 2) && (x == 0 || x == this.matrix.length - 1)) {
-            // red is temporarly cut off
-            this.gameOver |= 2;
-            for (let nextY = fromY; nextY <= toY; nextY++) {
-                if (!(this.matrix[x][nextY] & 1)) {
-                    this.gameOver &= ~2;
-                }
-            }
-        } else if (!this.yellowsTurn && !(this.gameOver & 1) && (y == 0 || y == this.matrix.length - 1)) {
-            // yellow is temporarly cut off
-            this.gameOver |= 1;
-            for (let nextX = fromX; nextX <= toX; nextX++) {
-                if (!(this.matrix[nextX][y] & 2)) {
-                    this.gameOver &= ~1;
-                }
+            if (!this.yellowsTurn && (this.matrix[0][i] & 3) == 2 && this.matrix[0][i] > 3) {
+                idQueue.add(0 + i * this.matrix.length);
             }
         }
+
+        return idQueue;
     }
 
+    /**
+     * for the current node in the loop, add it's connected nodes to the set
+     */
     private _nextNodesForSet(x: number, y: number, set: Set<number>): void {
         // check if current node in stack has more nodes connected
         let bridges = this.matrix[x][y] >> this.bridgeBitsOffset;
@@ -238,6 +193,45 @@ export class Graph {
             if (!(bridges & (2 ** directionIndex))) continue;
             let next = pointInDirectionOfIndex(x, y, directionIndex);
             set.add(next[0] + next[1] * this.matrix.length);
+        }
+    }
+
+    /**
+     * for cutoff detection we incorporate the nodes on either edge
+     */
+    private _addFlankingNodes(idQueue: Set<number>, side: number): void {
+        for (let i = 1; i < this.matrix.length - 1; i++) {
+            if (this.yellowsTurn) {
+                if ((this.matrix[side][i] & 3) == 1) idQueue.add(side + i * this.matrix.length);
+                else return;
+            } else {
+                if ((this.matrix[i][side] & 3) == 2) idQueue.add(i + side * this.matrix.length);
+                else return;
+            }
+        }
+    }
+
+    /**
+     * check if to the left or right everything is cutoff for the other player
+     */
+    private _checkCutOff(x: number, y: number): void {
+        // if we have reached either side
+        if (this.yellowsTurn && !(this.gameOver & 2) && (x == 0 || x == this.matrix.length - 1)) {
+            // red is temporarly cut off
+            this.gameOver |= 2;
+            for (let nextY = y + 1; nextY <= this.matrix.length - 2; nextY++) {
+                if (this.matrix[x][nextY] & 1) continue;
+                this.gameOver &= ~2;
+                return;
+            }
+        } else if (!this.yellowsTurn && !(this.gameOver & 1) && (y == 0 || y == this.matrix.length - 1)) {
+            // yellow is temporarly cut off
+            this.gameOver |= 1;
+            for (let nextX = x + 1; nextX <= this.matrix.length - 2; nextX++) {
+                if (this.matrix[nextX][y] & 2) continue;
+                this.gameOver &= ~1;
+                return;
+            }
         }
     }
 }
