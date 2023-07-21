@@ -200,7 +200,7 @@ input[type="button"] {
     cursor: pointer;
 }
 
-#game-won-modal-body {
+#game-over-modal-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr;

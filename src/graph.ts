@@ -1,223 +1,263 @@
-export enum State {
-    yellow = "Yellow",
-    red = "Red",
-    empty = "black",
-}
-
-export class Node {
-    x: number;
-    y: number;
-    state: State;
-    edges: Node[];
-    blockades: Set<Node>;
-    id: number;
-
-    constructor(x: number, y: number, tilesAcross: number, state: State) {
-        this.x = x;
-        this.y = y;
-        this.state = state;
-        this.edges = [];
-        this.blockades = new Set<Node>();
-        this.id = y * tilesAcross + x;
-    }
-}
-
-// -------------------------------------------------
-
+/**
+ * gameOver: 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
+ * ConnectedNodesQueue: all ids of nodes behind starting line with all their connections into the playing field
+ *      id = x + y * tilesAcross
+ */
 export class Graph {
+    matrix: number[][];
+    yellowsConnectedNodesQueue: Set<number>;
+    redsConnectedNodesQueue: Set<number>;
+
     yellowsTurn: boolean;
-    tilesAcross: number;
-    nodeList: Node[];
-    gameWon: State;
-    score: number;
+    gameOver: number;
+    // evaluation: number;
+
+    bridgeBitsOffset: number;
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
-        this.nodeList = [];
         this.yellowsTurn = yellowsTurn;
-        this.tilesAcross = tilesAcross;
-        this.gameWon = State.empty;
+        this.gameOver = 0;
+        this.bridgeBitsOffset = 2;
+        this.yellowsConnectedNodesQueue = new Set<number>();
+        this.redsConnectedNodesQueue = new Set<number>();
 
-        // create all nodes in empty state
-        for (let y = 0; y < tilesAcross; y++) {
-            for (let x = 0; x < tilesAcross; x++) {
-                if ((x == 0 || x == tilesAcross - 1) && (y == 0 || y == tilesAcross - 1)) continue; // the corners of the playing field
-                this.nodeList.push(new Node(x, y, tilesAcross, State.empty));
-            }
-        }
+        this.matrix = Array(tilesAcross)
+            .fill(0)
+            .map(() => Array(tilesAcross).fill(0));
+
+        // corners, potentially easier to implement
+        this.matrix[0][0] = 3;
+        this.matrix[0][tilesAcross - 1] = 3;
+        this.matrix[tilesAcross - 1][0] = 3;
+        this.matrix[tilesAcross - 1][tilesAcross - 1] = 3;
     }
 
     clone(): Graph {
-        let clonedGraph = new Graph(this.tilesAcross, this.yellowsTurn);
-        clonedGraph.nodeList = structuredClone(this.nodeList);
+        let clonedGraph = new Graph(this.matrix.length, this.yellowsTurn);
+        clonedGraph.matrix = structuredClone(this.matrix);
         return clonedGraph;
     }
 
-    graphToBitboard(): number[][] {
-        let matrix = Array(this.tilesAcross)
-            .fill(0)
-            .map(() => Array(this.tilesAcross).fill(3));
+    playNode(nodeA: number[]): boolean {
+        // if it's an empty hole, place a pin
+        if (this.matrix[nodeA[0]][nodeA[1]] != 0) return false;
+        this.matrix[nodeA[0]][nodeA[1]] = this.yellowsTurn ? 1 : 2;
 
-        this.nodeList.forEach((node) => {
-            if (node.state == State.empty) {
-                matrix[node.x][node.y] = 0;
-                return;
-            }
-            matrix[node.x][node.y] = node.state == State.yellow ? 1 : 2;
+        // check for bridges in all directions
+        for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+            let nodeB = pointInDirectionOfIndex(nodeA[0], nodeA[1], directionIndex);
 
-            node.edges.forEach((edge) => {
-                let offsetX = edge.x - node.x;
-                let offsetY = edge.y - node.y;
-
-                let bridgeIndex = (offsetX < 0 ? 4 : 0) | (offsetY < 0 ? 1 : 0) | (Math.abs(offsetX) == 1 ? 2 : 0);
-                // console.log(`node at: [${node.x}, ${node.y}]\n in direction x = ${offsetX}, y = ${offsetY}\n with direction index ${bridgeIndex}`);
-
-                matrix[node.x][node.y] |= (2 ** bridgeIndex) << 2;
-            });
-        });
-
-        // console.table(transpose(matrix, 10));
-        return matrix;
-    }
-
-    getNode(x: number, y: number): Node {
-        return this.nodeList.find((node) => {
-            return node.x == x && node.y == y;
-        });
-    }
-
-    addNode(x: number, y: number): boolean {
-        let node = this.getNode(x, y);
-
-        if (node.state != State.empty) return false;
-
-        node.state = this.yellowsTurn ? State.yellow : State.red;
-
-        let bridgeAdded: boolean = false;
-        for (let i = 0; i < 8; i++) {
-            // calculate x and y of all 8 potential (knight)moves
-            let iInBinary = ("000" + i.toString(2)).slice(-3);
-            let potentialX = node.x + (iInBinary[0] == "0" ? 1 : 2) * (iInBinary[1] == "0" ? -1 : 1);
-            let potentialY = node.y + (iInBinary[0] == "0" ? 2 : 1) * (iInBinary[2] == "0" ? 1 : -1);
-
-            // potentialNode is one out of the 8 surrounding neighbours that might have the same color and could be connected
-            let potentialNode = this.getNode(potentialX, potentialY);
-            if (!potentialNode) continue;
-            if (potentialNode.state != node.state) continue;
-
-            let edgeAdded = this.addEdge(node, potentialNode);
-            if (!edgeAdded) {
-                // console.log("Edge to potential Node (" + potentialNode.x + ", " + potentialNode.y + ") couldn't be added");
+            // if outside or a corner or not the same color
+            if (
+                this.matrix[nodeB[0]] == undefined ||
+                this.matrix[nodeB[0]][nodeB[1]] == undefined ||
+                this.matrix[nodeB[0]][nodeB[1]] == 3 ||
+                !((this.matrix[nodeB[0]][nodeB[1]] & 3) == (this.matrix[nodeA[0]][nodeA[1]] & 3))
+            ) {
                 continue;
             }
-            bridgeAdded = true;
+
+            if (this._checkForBlockades(nodeA, nodeB)) continue;
+            // add edge in both directions
+            this.matrix[nodeA[0]][nodeA[1]] |= (2 ** directionIndex) << 2;
+            let otherDirection = directionIndex & 1 ? (directionIndex + 3) % 8 : (directionIndex + 5) % 8;
+            this.matrix[nodeB[0]][nodeB[1]] |= (2 ** otherDirection) << 2;
         }
 
-        if (bridgeAdded) {
-            this.checkWinCondition();
-        }
+        this._checkGameOver();
+        console.log(`game over: ${this.gameOver}`);
 
-        this.score = this._calculateScore();
         this.yellowsTurn = !this.yellowsTurn;
         return true;
     }
 
-    addEdge(node: Node, potentialNode: Node): boolean {
-        let xDirectionPositive = potentialNode.x - node.x > 0;
-        let yDirectionPositive = potentialNode.y - node.y > 0;
+    private _checkForBlockades(nodeA: number[], nodeB: number[]): boolean {
+        // establish the bounding rectangle that contains the bridge connection
+        let topLeftX = Math.min(nodeA[0], nodeB[0]);
+        let topLeftY = Math.min(nodeA[1], nodeB[1]);
+        let bottomRightX = Math.max(nodeA[0], nodeB[0]);
+        let bottomRightY = Math.max(nodeA[1], nodeB[1]);
 
-        /*
-         *   vdownv       ^up^
-         *
-         *   node    potentialNode2
-         *   node1   potentialNode1
-         *   node2   potentialNode
-         *
-         *   applicable in other rotations
-         */
-        let node1 = this.getNode(potentialNode.x + (xDirectionPositive ? -1 : 1), potentialNode.y + (yDirectionPositive ? -1 : 1));
-        let potentialNode1 = this.getNode(node.x + (xDirectionPositive ? 1 : -1), node.y + (yDirectionPositive ? 1 : -1));
-
-        let node2 = this.getNode(node1.x * 2 - node.x, node1.y * 2 - node.y);
-        let potentialNode2 = this.getNode(potentialNode1.x * 2 - potentialNode.x, potentialNode1.y * 2 - potentialNode.y);
-
-        // check for collisions
-        if (node1.blockades.has(potentialNode2) || potentialNode1.blockades.has(node2) || node1.blockades.has(potentialNode1)) {
-            return false;
+        // collect the 4 nodes in the rectangle, skipping the ones the original bridge is connecting
+        let rectNodes: number[][] = [];
+        for (let rectY = topLeftY; rectY <= bottomRightY; rectY++) {
+            for (let rectX = topLeftX; rectX <= bottomRightX; rectX++) {
+                if ((rectX == nodeA[0] && rectY == nodeA[1]) || (rectX == nodeB[0] && rectY == nodeB[1])) continue;
+                rectNodes.push([rectX, rectY]);
+            }
         }
 
-        const addBlockade = (nodeA: Node, nodeB: Node) => {
-            nodeA.blockades.add(nodeB);
-            nodeB.blockades.add(nodeA);
-        };
-        addBlockade(node, node1);
-        addBlockade(node1, potentialNode);
-        addBlockade(potentialNode, potentialNode1);
-        addBlockade(potentialNode1, node);
+        // for the 4 Nodes, see if any of them have an intersecting bridge
+        return rectNodes.some((rectNode) => {
+            // only check the nodes that have bridges
+            let bridges = this.matrix[rectNode[0]][rectNode[1]] >> this.bridgeBitsOffset;
+            if (!bridges) return false;
 
-        // add bridge both ways
-        node.edges.push(potentialNode);
-        potentialNode.edges.push(node);
-        return true;
+            // go over each bridge and check for intersection with the original one
+            for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+                if (!(bridges & (2 ** directionIndex))) continue;
+
+                let outsideRectNode = pointInDirectionOfIndex(rectNode[0], rectNode[1], directionIndex);
+                if (intersects(nodeA, nodeB, rectNode, outsideRectNode)) {
+                    return true;
+                }
+            }
+        });
     }
 
-    checkWinCondition(): void {
-        let nodeQueue = new Set<Node>();
-        for (let i = 1; i < this.tilesAcross - 1; i++) {
-            let startNode = this.yellowsTurn ? this.getNode(i, 0) : this.getNode(0, i);
-            if ((this.yellowsTurn && startNode.state != State.yellow) || (!this.yellowsTurn && startNode.state != State.red)) continue;
-            nodeQueue.add(startNode);
+    // -------------------------------------------------
+
+    // gameOver : 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
+    private _checkGameOver(): void {
+        // could be sorted highest number to lowest number to have conditions stop each loop earlier
+        this._updateNodesQueue();
+        // no need to check the win condition if the current moving player is already cut off
+        if ((this.yellowsTurn && !(this.gameOver & 1)) || (!this.yellowsTurn && !(this.gameOver & 2))) {
+            this._checkGameWon();
         }
 
-        let connectionFound: boolean = false;
-        nodeQueue.forEach((node) => {
-            if (connectionFound) return;
-            if ((this.yellowsTurn && node.y == this.tilesAcross - 1) || (!this.yellowsTurn && node.x == this.tilesAcross - 1)) {
-                connectionFound = true;
+        // if game already won or cutoff already detected earlier, no need to check anymore
+        if (this.gameOver > 2) return;
+        if (this.yellowsTurn && this.gameOver == 2) return;
+        if (!this.yellowsTurn && this.gameOver == 1) return;
+
+        // this could potentially be turned into two class variables too
+        let cutOffNodeIdQueue = new Set(this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
+
+        let nodeAdded = false;
+        nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, 0);
+        nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1) ? true : nodeAdded;
+
+        cutOffNodeIdQueue.forEach((nodeId) => {
+            if (this.gameOver > 2) return;
+
+            // translate id to coords
+            let x = nodeId % this.matrix.length;
+            let y = Math.floor(nodeId / this.matrix.length);
+
+            this._checkCutOff(x, y);
+
+            // check if from the left and right the other side has been reached
+            if (this.yellowsTurn && y == this.matrix.length - 1) {
+                this.gameOver |= 2;
                 return;
             }
-            node.edges.forEach((node) => {
-                nodeQueue.add(node);
-            });
+            if (!this.yellowsTurn && x == this.matrix.length - 1) {
+                this.gameOver |= 1;
+                return;
+            }
+
+            if (nodeAdded) this._nextNodesForSet(x, y, cutOffNodeIdQueue);
         });
-        if (connectionFound) {
-            this.gameWon = this.yellowsTurn ? State.yellow : State.red;
+    }
+
+    private _checkGameWon() {
+        console.log("checking win condition");
+        (this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue).forEach((nodeId) => {
+            if (this.gameOver > 2) return;
+
+            // translate id to coords
+            let x = nodeId % this.matrix.length;
+            let y = Math.floor(nodeId / this.matrix.length);
+
+            // check if the other side has been reached
+            if (this.yellowsTurn && y == this.matrix.length - 1) {
+                this.gameOver |= 4;
+                return;
+            }
+            if (!this.yellowsTurn && x == this.matrix.length - 1) {
+                this.gameOver |= 8;
+                return;
+            }
+
+            this._nextNodesForSet(x, y, this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
+        });
+    }
+
+    // @returns Set of Ids of all the Nodes behind the starting line
+    private _updateNodesQueue() {
+        for (let i = 1; i < this.matrix.length - 1; i++) {
+            if (this.yellowsTurn && (this.matrix[i][0] & 3) == 1 && this.matrix[i][0] > 3) {
+                this.yellowsConnectedNodesQueue.add(i + 0 * this.matrix.length);
+            }
+            if (!this.yellowsTurn && (this.matrix[0][i] & 3) == 2 && this.matrix[0][i] > 3) {
+                this.redsConnectedNodesQueue.add(0 + i * this.matrix.length);
+            }
         }
     }
 
-    getPossibleMoves(): number[][] {
-        let possibleMoves: number[][] = [];
-        this.nodeList.forEach((node) => {
-            if (node.state != State.empty) return;
-            possibleMoves.push([node.x, node.y]);
-        });
-        return possibleMoves;
+    // for the current node in the loop, add it's connected nodes to the set
+    private _nextNodesForSet(x: number, y: number, set: Set<number>): void {
+        // check if current node in stack has more nodes connected
+        let bridges = this.matrix[x][y] >> this.bridgeBitsOffset;
+        if (!bridges) return;
+
+        for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+            if (!(bridges & (2 ** directionIndex))) continue;
+            let next = pointInDirectionOfIndex(x, y, directionIndex);
+            set.add(next[0] + next[1] * this.matrix.length);
+        }
     }
 
-    /**
-     * TODO make the score more advanced with more factors
-     * (not always coorect for both ideas)
-     * who has more connecting bridges
-     * who has a longer connection that is not yet a winning connection
-     */
-    _calculateScore() {
-        if (this.gameWon == State.empty) {
-            return 0;
+    // for cutoff detection we incorporate the nodes on either edge
+    private _addFlankingNodes(idQueue: Set<number>, side: number): boolean {
+        let nodeAdded = false;
+        for (let i = 1; i < this.matrix.length - 1; i++) {
+            if (this.yellowsTurn) {
+                if (!((this.matrix[side][i] & 3) == 1)) {
+                    break;
+                }
+                idQueue.add(side + i * this.matrix.length);
+                nodeAdded = true;
+            } else {
+                if (!((this.matrix[i][side] & 3) == 2)) break;
+                idQueue.add(i + side * this.matrix.length);
+                nodeAdded = true;
+            }
         }
-        // the earlier the game is won, the higher the score
-        let maxValue = this.tilesAcross ** 2 - 4 + this.getPossibleMoves().length;
-        if (this.gameWon == State.yellow) {
-            return maxValue;
-        }
-        if (this.gameWon == State.red) {
-            return maxValue * -1;
+        return nodeAdded;
+    }
+
+    // check if to the left or right everything is cutoff for the other player
+    private _checkCutOff(x: number, y: number): void {
+        // if we have reached either side
+        if (this.yellowsTurn && !(this.gameOver & 2) && (x == 0 || x == this.matrix.length - 1)) {
+            // red is temporarly cut off
+            this.gameOver |= 2;
+            for (let nextY = y + 1; nextY <= this.matrix.length - 2; nextY++) {
+                if (this.matrix[x][nextY] & 1) continue;
+                this.gameOver &= ~2;
+                return;
+            }
+        } else if (!this.yellowsTurn && !(this.gameOver & 1) && (y == 0 || y == this.matrix.length - 1)) {
+            // yellow is temporarly cut off
+            this.gameOver |= 1;
+            for (let nextX = x + 1; nextX <= this.matrix.length - 2; nextX++) {
+                if (this.matrix[nextX][y] & 2) continue;
+                this.gameOver &= ~1;
+                return;
+            }
         }
     }
 }
 
-export function transpose(a: number[][], numeral: number) {
-    return Object.keys(a[0]).map(function (c: any) {
-        return a.map(function (r) {
-            return numeral == 10 ? r[c] : r[c].toString(numeral);
-        });
-    });
+// gets a directionIndex between 0 and 7 and returns the corresponding x and y direction
+export function pointInDirectionOfIndex(x: number, y: number, directionIndex: number): number[] {
+    let newX = (directionIndex & 2 ? 1 : 2) * (directionIndex & 4 ? -1 : 1);
+    let newY = (directionIndex & 2 ? 2 : 1) * (directionIndex & 1 ? -1 : 1);
+
+    return [x + newX, y + newY];
+}
+
+// https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function
+function intersects(a: number[], b: number[], p: number[], q: number[]) {
+    var det, gamma, lambda;
+    det = (b[0] - a[0]) * (q[1] - p[1]) - (q[0] - p[0]) * (b[1] - a[1]);
+    if (det === 0) {
+        return false;
+    } else {
+        lambda = ((q[1] - p[1]) * (q[0] - a[0]) + (p[0] - q[0]) * (q[1] - a[1])) / det;
+        gamma = ((a[1] - b[1]) * (q[0] - a[0]) + (b[0] - a[0]) * (q[1] - a[1])) / det;
+        return 0 < lambda && lambda < 1 && 0 < gamma && gamma < 1;
+    }
 }
