@@ -1,9 +1,5 @@
 import { Graph } from "./graph";
 
-// -------------------------------------------------
-// global variables
-// -------------------------------------------------
-
 class Model {
     mainGraph: Graph;
     history: Graph[];

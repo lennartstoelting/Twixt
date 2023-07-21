@@ -1,5 +1,3 @@
-// for understanding the bitwise operations: https://www.w3schools.com/js/js_bitwise.asp
-
 /**
  * gameOver: 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
  * ConnectedNodesQueue: all ids of nodes behind starting line with all their connections into the playing field
@@ -67,13 +65,13 @@ export class Graph {
         }
 
         this._checkGameOver();
-        console.log(this.gameOver);
+        console.log(`game over: ${this.gameOver}`);
 
         this.yellowsTurn = !this.yellowsTurn;
         return true;
     }
 
-    private _checkForBlockades(nodeA: any, nodeB: any): boolean {
+    private _checkForBlockades(nodeA: number[], nodeB: number[]): boolean {
         // establish the bounding rectangle that contains the bridge connection
         let topLeftX = Math.min(nodeA[0], nodeB[0]);
         let topLeftY = Math.min(nodeA[1], nodeB[1]);
@@ -100,37 +98,25 @@ export class Graph {
                 if (!(bridges & (2 ** directionIndex))) continue;
 
                 let outsideRectNode = pointInDirectionOfIndex(rectNode[0], rectNode[1], directionIndex);
-                if (intersects(nodeA[0], nodeA[1], nodeB[0], nodeB[1], rectNode[0], rectNode[1], outsideRectNode[0], outsideRectNode[1])) {
+                if (intersects(nodeA, nodeB, rectNode, outsideRectNode)) {
                     return true;
                 }
             }
         });
     }
 
+    // -------------------------------------------------
+
     // gameOver : 0th bit = (yellow is cut off), 1st bit = (red is cut off), 2nd bit = (yellow won), 3rd bit = (red won)
     private _checkGameOver(): void {
+        // could be sorted highest number to lowest number to have conditions stop each loop earlier
         this._updateNodesQueue();
-        (this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue).forEach((nodeId) => {
-            if (this.gameOver > 2) return;
+        // no need to check the win condition if the current moving player is already cut off
+        if ((this.yellowsTurn && !(this.gameOver & 1)) || (!this.yellowsTurn && !(this.gameOver & 2))) {
+            this._checkGameWon();
+        }
 
-            // translate id to coords
-            let x = nodeId % this.matrix.length;
-            let y = Math.floor(nodeId / this.matrix.length);
-
-            // check if the other side has been reached
-            if (this.yellowsTurn && y == this.matrix.length - 1) {
-                this.gameOver |= 4;
-                return;
-            }
-            if (!this.yellowsTurn && x == this.matrix.length - 1) {
-                this.gameOver |= 8;
-                return;
-            }
-
-            this._nextNodesForSet(x, y, this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
-        });
-
-        // if game already won or cutoff already detected, no need to check anymore
+        // if game already won or cutoff already detected earlier, no need to check anymore
         if (this.gameOver > 2) return;
         if (this.yellowsTurn && this.gameOver == 2) return;
         if (!this.yellowsTurn && this.gameOver == 1) return;
@@ -165,9 +151,30 @@ export class Graph {
         });
     }
 
-    /**
-     * @returns Set of Ids of all the Nodes behind the starting line
-     */
+    private _checkGameWon() {
+        console.log("checking win condition");
+        (this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue).forEach((nodeId) => {
+            if (this.gameOver > 2) return;
+
+            // translate id to coords
+            let x = nodeId % this.matrix.length;
+            let y = Math.floor(nodeId / this.matrix.length);
+
+            // check if the other side has been reached
+            if (this.yellowsTurn && y == this.matrix.length - 1) {
+                this.gameOver |= 4;
+                return;
+            }
+            if (!this.yellowsTurn && x == this.matrix.length - 1) {
+                this.gameOver |= 8;
+                return;
+            }
+
+            this._nextNodesForSet(x, y, this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
+        });
+    }
+
+    // @returns Set of Ids of all the Nodes behind the starting line
     private _updateNodesQueue() {
         for (let i = 1; i < this.matrix.length - 1; i++) {
             if (this.yellowsTurn && (this.matrix[i][0] & 3) == 1 && this.matrix[i][0] > 3) {
@@ -179,9 +186,7 @@ export class Graph {
         }
     }
 
-    /**
-     * for the current node in the loop, add it's connected nodes to the set
-     */
+    // for the current node in the loop, add it's connected nodes to the set
     private _nextNodesForSet(x: number, y: number, set: Set<number>): void {
         // check if current node in stack has more nodes connected
         let bridges = this.matrix[x][y] >> this.bridgeBitsOffset;
@@ -194,9 +199,7 @@ export class Graph {
         }
     }
 
-    /**
-     * for cutoff detection we incorporate the nodes on either edge
-     */
+    // for cutoff detection we incorporate the nodes on either edge
     private _addFlankingNodes(idQueue: Set<number>, side: number): boolean {
         let nodeAdded = false;
         for (let i = 1; i < this.matrix.length - 1; i++) {
@@ -215,9 +218,7 @@ export class Graph {
         return nodeAdded;
     }
 
-    /**
-     * check if to the left or right everything is cutoff for the other player
-     */
+    // check if to the left or right everything is cutoff for the other player
     private _checkCutOff(x: number, y: number): void {
         // if we have reached either side
         if (this.yellowsTurn && !(this.gameOver & 2) && (x == 0 || x == this.matrix.length - 1)) {
@@ -248,17 +249,15 @@ export function pointInDirectionOfIndex(x: number, y: number, directionIndex: nu
     return [x + newX, y + newY];
 }
 
-/**
- * https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function
- */
-function intersects(a: number, b: number, c: number, d: number, p: number, q: number, r: number, s: number) {
+// https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function
+function intersects(a: number[], b: number[], p: number[], q: number[]) {
     var det, gamma, lambda;
-    det = (c - a) * (s - q) - (r - p) * (d - b);
+    det = (b[0] - a[0]) * (q[1] - p[1]) - (q[0] - p[0]) * (b[1] - a[1]);
     if (det === 0) {
         return false;
     } else {
-        lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
-        gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
+        lambda = ((q[1] - p[1]) * (q[0] - a[0]) + (p[0] - q[0]) * (q[1] - a[1])) / det;
+        gamma = ((a[1] - b[1]) * (q[0] - a[0]) + (b[0] - a[0]) * (q[1] - a[1])) / det;
         return 0 < lambda && lambda < 1 && 0 < gamma && gamma < 1;
     }
 }

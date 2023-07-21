@@ -155,7 +155,7 @@ class Controller {
         this.view.board.addEventListener("click", (event: MouseEvent) => this._boardClicked(event));
     }
 
-    private _boardClicked(event: any): void {
+    private _boardClicked(event: MouseEvent): void {
         let rect = this.view.board.getBoundingClientRect();
         // calculate which tile was clicked from global coordinates to matrix coordinates
         var x = Math.floor((event.clientX - rect.left) / this.view.tileSize);

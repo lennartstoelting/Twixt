@@ -1,7 +1,7 @@
 import { Graph, pointInDirectionOfIndex } from "./graph";
 
 class View {
-    board: any;
+    board: HTMLCanvasElement;
     tileSize: number;
     private boardSideLength: number;
     private borderRadius: number;
