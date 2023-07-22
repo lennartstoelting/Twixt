@@ -32,13 +32,24 @@ export class Graph {
         this.matrix[tilesAcross - 1][tilesAcross - 1] = 3;
     }
 
-    clone(): Graph {
+    public clone(): Graph {
         let clonedGraph = new Graph(this.matrix.length, this.yellowsTurn);
         clonedGraph.matrix = structuredClone(this.matrix);
         return clonedGraph;
     }
 
-    playNode(nodeA: number[]): boolean {
+    public getLegalMoves(): number[][] {
+        let legalMoves: number[][] = [];
+        this.matrix.forEach((column, x) => {
+            column.forEach((node, y) => {
+                if (node != 0) return;
+                legalMoves.push([x, y]);
+            });
+        });
+        return legalMoves;
+    }
+
+    public playNode(nodeA: number[]): boolean {
         // if it's an empty hole, place a pin
         if (this.matrix[nodeA[0]][nodeA[1]] != 0) return false;
         this.matrix[nodeA[0]][nodeA[1]] = this.yellowsTurn ? 1 : 2;
@@ -59,9 +70,9 @@ export class Graph {
 
             if (this._checkForBlockades(nodeA, nodeB)) continue;
             // add edge in both directions
-            this.matrix[nodeA[0]][nodeA[1]] |= (2 ** directionIndex) << 2;
+            this.matrix[nodeA[0]][nodeA[1]] |= 1 << (directionIndex + this.bridgeBitsOffset);
             let otherDirection = directionIndex & 1 ? (directionIndex + 3) % 8 : (directionIndex + 5) % 8;
-            this.matrix[nodeB[0]][nodeB[1]] |= (2 ** otherDirection) << 2;
+            this.matrix[nodeB[0]][nodeB[1]] |= 1 << (otherDirection + this.bridgeBitsOffset);
         }
 
         this._checkGameOver();
@@ -95,7 +106,7 @@ export class Graph {
 
             // go over each bridge and check for intersection with the original one
             for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
-                if (!(bridges & (2 ** directionIndex))) continue;
+                if (!(bridges & (1 << directionIndex))) continue;
 
                 let outsideRectNode = pointInDirectionOfIndex(rectNode[0], rectNode[1], directionIndex);
                 if (intersects(nodeA, nodeB, rectNode, outsideRectNode)) {
@@ -152,7 +163,6 @@ export class Graph {
     }
 
     private _checkGameWon() {
-        console.log("checking win condition");
         (this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue).forEach((nodeId) => {
             if (this.gameOver > 2) return;
 
@@ -193,7 +203,7 @@ export class Graph {
         if (!bridges) return;
 
         for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
-            if (!(bridges & (2 ** directionIndex))) continue;
+            if (!(bridges & (1 << directionIndex))) continue;
             let next = pointInDirectionOfIndex(x, y, directionIndex);
             set.add(next[0] + next[1] * this.matrix.length);
         }

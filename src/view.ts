@@ -18,7 +18,7 @@ class View {
         this.borderRadius = 3;
     }
 
-    drawBoard(graph: Graph, gridlines: boolean, blockades: boolean): void {
+    public drawBoard(graph: Graph, gridlines: boolean, blockades: boolean): void {
         this._createCanvas(graph);
         this._drawBackground();
         if (gridlines) {

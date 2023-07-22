@@ -47,7 +47,7 @@ class Controller {
         this._updateView();
     }
 
-    _getDomElements(): void {
+    private _getDomElements(): void {
         // game-/debug-buttons
         this.restartGameButton = document.getElementById("restart-game") as HTMLButtonElement;
         this.undoMoveButton = document.getElementById("undo-move") as HTMLButtonElement;
@@ -80,7 +80,7 @@ class Controller {
         this.keepPlayingButton = document.getElementById("keep-playing") as HTMLButtonElement;
     }
 
-    _initEventListeners(): void {
+    private _initEventListeners(): void {
         window.addEventListener("resize", () => {
             this._updateView();
         });
