@@ -30,6 +30,22 @@ class Model {
         return true;
     }
 
+    // maybe move this to an extra test.ts file
+    public runPerformance(...args: any) {
+        for (let i = 0; i < args.length; i++) {
+            console.log(args[i]);
+            console.time(args[i].name);
+            for (let j = 0; j < 1000000000; j++) {
+                args[i];
+            }
+            console.timeEnd(args[i].name);
+        }
+    }
+
+    public testPerformance() {
+        this.runPerformance(this.mainGraph.clone);
+    }
+
     // alpha beta pruning mit iterative deepening
     // dazu lookup/transposition table
     // vielleicht run-lenght encoding zum sparen von Speicher

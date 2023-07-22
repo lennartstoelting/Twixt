@@ -58,17 +58,16 @@ export class Graph {
         for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
             let nodeB = pointInDirectionOfIndex(nodeA[0], nodeA[1], directionIndex);
 
-            // if outside or a corner or not the same color
-            if (
-                this.matrix[nodeB[0]] == undefined ||
-                this.matrix[nodeB[0]][nodeB[1]] == undefined ||
-                this.matrix[nodeB[0]][nodeB[1]] == 3 ||
-                !((this.matrix[nodeB[0]][nodeB[1]] & 3) == (this.matrix[nodeA[0]][nodeA[1]] & 3))
-            ) {
-                continue;
-            }
+            // if outside of board
+            if (nodeB[0] < 0 || nodeB[0] > this.matrix.length - 1) continue;
+            if (nodeB[1] < 0 || nodeB[1] > this.matrix.length - 1) continue;
+            // if one of the missing corners
+            if (this.matrix[nodeB[0]][nodeB[1]] == 3) continue;
+            // if not the same color
+            if ((this.matrix[nodeB[0]][nodeB[1]] & 3) != (this.matrix[nodeA[0]][nodeA[1]] & 3)) continue;
 
             if (this._checkForBlockades(nodeA, nodeB)) continue;
+
             // add edge in both directions
             this.matrix[nodeA[0]][nodeA[1]] |= 1 << (directionIndex + this.bridgeBitsOffset);
             let otherDirection = directionIndex & 1 ? (directionIndex + 3) % 8 : (directionIndex + 5) % 8;

@@ -93,8 +93,9 @@ class Controller {
             this.model.undoMove() ? this._updateView() : console.log("no more positions in history array");
         });
         this.toggleGridlinesButton.addEventListener("click", () => {
-            this.showGridlines = !this.showGridlines;
-            this._updateView();
+            // this.showGridlines = !this.showGridlines;
+            // this._updateView();
+            this.model.testPerformance();
         });
         this.toggleBlockadesButton.addEventListener("click", () => {
             this.showBlockades = !this.showBlockades;
