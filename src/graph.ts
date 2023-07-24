@@ -66,12 +66,12 @@ export class Graph {
             // if not the same color
             if ((this.matrix[nodeB[0]][nodeB[1]] & 3) != (this.matrix[nodeA[0]][nodeA[1]] & 3)) continue;
 
-            if (this._checkForBlockades(nodeA, nodeB)) continue;
+            let otherDirectionIndex = directionIndex & 1 ? (directionIndex + 3) % 8 : (directionIndex + 5) % 8;
+            if (this._checkForBlockades(nodeA, nodeB, directionIndex, otherDirectionIndex)) continue;
 
             // add edge in both directions
             this.matrix[nodeA[0]][nodeA[1]] |= 1 << (directionIndex + this.bridgeBitsOffset);
-            let otherDirection = directionIndex & 1 ? (directionIndex + 3) % 8 : (directionIndex + 5) % 8;
-            this.matrix[nodeB[0]][nodeB[1]] |= 1 << (otherDirection + this.bridgeBitsOffset);
+            this.matrix[nodeB[0]][nodeB[1]] |= 1 << (otherDirectionIndex + this.bridgeBitsOffset);
         }
 
         this._checkGameOver();
@@ -81,7 +81,7 @@ export class Graph {
         return true;
     }
 
-    private _checkForBlockades(nodeA: number[], nodeB: number[]): boolean {
+    private _checkForBlockades(nodeA: number[], nodeB: number[], mainDirectionIndex: number, otherDirectionIndex: number): boolean {
         // establish the bounding rectangle that contains the bridge connection
         let topLeftX = Math.min(nodeA[0], nodeB[0]);
         let topLeftY = Math.min(nodeA[1], nodeB[1]);
@@ -105,6 +105,7 @@ export class Graph {
 
             // go over each bridge and check for intersection with the original one
             for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+                if (directionIndex == mainDirectionIndex || directionIndex == otherDirectionIndex) continue;
                 if (!(bridges & (1 << directionIndex))) continue;
 
                 let outsideRectNode = pointInDirectionOfIndex(rectNode[0], rectNode[1], directionIndex);
@@ -134,9 +135,7 @@ export class Graph {
         // this could potentially be turned into two class variables too
         let cutOffNodeIdQueue = new Set(this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
 
-        let nodeAdded = false;
-        nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, 0);
-        nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1) ? true : nodeAdded;
+        let nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, 0) || this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1);
 
         cutOffNodeIdQueue.forEach((nodeId) => {
             if (this.gameOver > 2) return;
