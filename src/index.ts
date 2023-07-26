@@ -3,7 +3,7 @@ import View from "./view";
 
 /** handles all input, checks in with model and displays the result with view */
 
-var tilesAcrossDefault = 8;
+var tilesAcrossDefault = 6;
 
 class Controller {
     model: Model;

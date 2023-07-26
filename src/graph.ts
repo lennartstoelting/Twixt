@@ -148,12 +148,15 @@ export class Graph {
         // this could potentially be turned into two class variables too
         let cutOffNodeIdQueue = new Set(this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
 
-        let nodesAdded = this._addFlankingNodes(cutOffNodeIdQueue, 0) || this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1);
+        this._addFlankingNodes(cutOffNodeIdQueue, 0);
+        this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1);
 
         cutOffNodeIdQueue.forEach((nodeId) => {
             // translate id to coords
             let x = nodeId % this.matrix.length;
             let y = Math.floor(nodeId / this.matrix.length);
+
+            console.log(`nodeId being searched: ${nodeId}`);
 
             this._checkCutOff(x, y);
 
@@ -170,7 +173,41 @@ export class Graph {
             if (this.yellowsTurn && this.redCutOff) return;
             if (!this.yellowsTurn && this.yellowCutOff) return;
 
-            if (nodesAdded) this._nextNodesForSet(x, y, cutOffNodeIdQueue);
+            this._nextNodesForSet(x, y, cutOffNodeIdQueue);
+
+            let bridges = this.matrix[x][y] >> this.bridgeBitsOffset;
+            if (!bridges) return;
+
+            // if (bridges & (1 << 0)) {
+            //     if ((this.matrix[x + 1][y] & 3) == (this.matrix[x][y] & 3) && this.matrix[x + 1][y] >> this.bridgeBitsOffset) {
+            //         cutOffNodeIdQueue.add(x + 1 + y * this.matrix.length);
+            //     }
+            //     if ((this.matrix[x + 1][y + 1] & 3) == (this.matrix[x][y] & 3) && this.matrix[x + 1][y + 1] >> this.bridgeBitsOffset) {
+            //         cutOffNodeIdQueue.add(x + 1 + (y + 1) * this.matrix.length);
+            //     }
+            // }
+            // if (bridges & (1 << 1)) {
+            //     if ((this.matrix[x + 1][y] & 3) == (this.matrix[x][y] & 3) && this.matrix[x + 1][y] >> this.bridgeBitsOffset) {
+            //         cutOffNodeIdQueue.add(x + 1 + y * this.matrix.length);
+            //     }
+            //     if ((this.matrix[x + 1][y - 1] & 3) == (this.matrix[x][y] & 3) && this.matrix[x + 1][y - 1] >> this.bridgeBitsOffset) {
+            //         cutOffNodeIdQueue.add(x + 1 + (y - 1) * this.matrix.length);
+            //     }
+            // }
+
+            for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+                if (!(bridges & (1 << directionIndex))) continue;
+                let x_1 = x + (directionIndex & 4 ? -1 : 1) * (directionIndex & 2 ? 0 : 1);
+                let y_1 = y + (directionIndex & 1 ? -1 : 1) * (directionIndex & 2 ? 1 : 0);
+                let x_2 = x + (directionIndex & 4 ? -1 : 1);
+                let y_2 = y + (directionIndex & 1 ? -1 : 1);
+                if ((this.matrix[x_1][y_1] & 3) == (this.matrix[x][y] & 3) && this.matrix[x_1][y_1] >> this.bridgeBitsOffset) {
+                    cutOffNodeIdQueue.add(x_1 + y_1 * this.matrix.length);
+                }
+                if ((this.matrix[x_2][y_2] & 3) == (this.matrix[x][y] & 3) && this.matrix[x_2][y_2] >> this.bridgeBitsOffset) {
+                    cutOffNodeIdQueue.add(x_2 + y_2 * this.matrix.length);
+                }
+            }
         });
     }
 
