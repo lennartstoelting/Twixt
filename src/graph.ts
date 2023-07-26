@@ -194,20 +194,30 @@ export class Graph {
             //         cutOffNodeIdQueue.add(x + 1 + (y - 1) * this.matrix.length);
             //     }
             // }
-
             for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
                 if (!(bridges & (1 << directionIndex))) continue;
-                let x_1 = x + (directionIndex & 4 ? -1 : 1) * (directionIndex & 2 ? 0 : 1);
-                let y_1 = y + (directionIndex & 1 ? -1 : 1) * (directionIndex & 2 ? 1 : 0);
-                let x_2 = x + (directionIndex & 4 ? -1 : 1);
-                let y_2 = y + (directionIndex & 1 ? -1 : 1);
-                if ((this.matrix[x_1][y_1] & 3) == (this.matrix[x][y] & 3) && this.matrix[x_1][y_1] >> this.bridgeBitsOffset) {
-                    cutOffNodeIdQueue.add(x_1 + y_1 * this.matrix.length);
-                }
-                if ((this.matrix[x_2][y_2] & 3) == (this.matrix[x][y] & 3) && this.matrix[x_2][y_2] >> this.bridgeBitsOffset) {
-                    cutOffNodeIdQueue.add(x_2 + y_2 * this.matrix.length);
+                for (let k = 0; k < 2; k++) {
+                    let x_1 = x + (directionIndex & 4 ? -1 : 1) * (k ? (directionIndex & 2 ? 0 : 1) : 1);
+                    let y_1 = y + (directionIndex & 1 ? -1 : 1) * (k ? (directionIndex & 2 ? 1 : 0) : 1);
+                    if ((this.matrix[x_1][y_1] & 3) == (this.matrix[x][y] & 3) && this.matrix[x_1][y_1] >> this.bridgeBitsOffset) {
+                        cutOffNodeIdQueue.add(x_1 + y_1 * this.matrix.length);
+                    }
                 }
             }
+
+            // for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+            //     if (!(bridges & (1 << directionIndex))) continue;
+            //     let x_1 = x + (directionIndex & 4 ? -1 : 1) * (directionIndex & 2 ? 0 : 1);
+            //     let y_1 = y + (directionIndex & 1 ? -1 : 1) * (directionIndex & 2 ? 1 : 0);
+            //     let x_2 = x + (directionIndex & 4 ? -1 : 1);
+            //     let y_2 = y + (directionIndex & 1 ? -1 : 1);
+            //     if ((this.matrix[x_1][y_1] & 3) == (this.matrix[x][y] & 3) && this.matrix[x_1][y_1] >> this.bridgeBitsOffset) {
+            //         cutOffNodeIdQueue.add(x_1 + y_1 * this.matrix.length);
+            //     }
+            //     if ((this.matrix[x_2][y_2] & 3) == (this.matrix[x][y] & 3) && this.matrix[x_2][y_2] >> this.bridgeBitsOffset) {
+            //         cutOffNodeIdQueue.add(x_2 + y_2 * this.matrix.length);
+            //     }
+            // }
         });
     }
 
