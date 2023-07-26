@@ -9,14 +9,20 @@ export class Graph {
     redsConnectedNodesQueue: Set<number>;
 
     yellowsTurn: boolean;
-    gameOver: number;
-    // evaluation: number;
+
+    yellowWon: boolean;
+    redWon: boolean;
+    yellowCutOff: boolean;
+    redCutOff: boolean;
 
     bridgeBitsOffset: number;
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.yellowsTurn = yellowsTurn;
-        this.gameOver = 0;
+        this.yellowWon = false;
+        this.redWon = false;
+        this.yellowCutOff = false;
+        this.redCutOff = false;
         this.bridgeBitsOffset = 2;
         this.yellowsConnectedNodesQueue = new Set<number>();
         this.redsConnectedNodesQueue = new Set<number>();
@@ -75,7 +81,9 @@ export class Graph {
         }
 
         this._checkGameOver();
-        console.log(`game over: ${this.gameOver}`);
+        console.log(
+            `yellow won: ${this.yellowWon}, red won: ${this.redWon} \n yellow is cut off: ${this.yellowCutOff}, red is cut off: ${this.redCutOff}`
+        );
 
         this.yellowsTurn = !this.yellowsTurn;
         return true;
@@ -92,7 +100,8 @@ export class Graph {
         let rectNodes: number[][] = [];
         for (let rectY = topLeftY; rectY <= bottomRightY; rectY++) {
             for (let rectX = topLeftX; rectX <= bottomRightX; rectX++) {
-                if ((rectX == nodeA[0] && rectY == nodeA[1]) || (rectX == nodeB[0] && rectY == nodeB[1])) continue;
+                if (rectX == nodeA[0] && rectY == nodeA[1]) continue;
+                if (rectX == nodeB[0] && rectY == nodeB[1]) continue;
                 rectNodes.push([rectX, rectY]);
             }
         }
@@ -105,13 +114,21 @@ export class Graph {
 
             // go over each bridge and check for intersection with the original one
             for (let directionIndex = 0; directionIndex < 8; directionIndex++) {
+                // if the potentially intersecting bridges are paralell
                 if (directionIndex == mainDirectionIndex || directionIndex == otherDirectionIndex) continue;
                 if (!(bridges & (1 << directionIndex))) continue;
 
                 let outsideRectNode = pointInDirectionOfIndex(rectNode[0], rectNode[1], directionIndex);
-                if (intersects(nodeA, nodeB, rectNode, outsideRectNode)) {
-                    return true;
-                }
+                // if the potentially intersecting bridge shoots of in another direction
+                // with a distance of +/-2 from the original rectangle that was encasing the original bridge
+                if (
+                    outsideRectNode[0] < topLeftX - 1 ||
+                    outsideRectNode[0] > bottomRightX + 1 ||
+                    outsideRectNode[1] < topLeftY - 1 ||
+                    outsideRectNode[1] > bottomRightY + 1
+                )
+                    continue;
+                if (intersects(nodeA, nodeB, rectNode, outsideRectNode)) return true;
             }
         });
     }
@@ -123,14 +140,14 @@ export class Graph {
         // could be sorted highest number to lowest number to have conditions stop each loop earlier
         this._updateNodesQueue();
         // no need to check the win condition if the current moving player is already cut off
-        if ((this.yellowsTurn && !(this.gameOver & 1)) || (!this.yellowsTurn && !(this.gameOver & 2))) {
+        if ((this.yellowsTurn && !this.yellowCutOff) || (!this.yellowsTurn && !this.redCutOff)) {
             this._checkGameWon();
         }
 
         // if game already won or cutoff already detected earlier, no need to check anymore
-        if (this.gameOver > 2) return;
-        if (this.yellowsTurn && this.gameOver == 2) return;
-        if (!this.yellowsTurn && this.gameOver == 1) return;
+        if (this.yellowWon || this.redWon || (this.yellowCutOff && this.redCutOff)) return;
+        if (this.yellowsTurn && this.redCutOff) return;
+        if (!this.yellowsTurn && this.yellowCutOff) return;
 
         // this could potentially be turned into two class variables too
         let cutOffNodeIdQueue = new Set(this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
@@ -138,7 +155,7 @@ export class Graph {
         let nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, 0) || this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1);
 
         cutOffNodeIdQueue.forEach((nodeId) => {
-            if (this.gameOver > 2) return;
+            if (this.yellowWon || this.redWon || (this.yellowCutOff && this.redCutOff)) return;
 
             // translate id to coords
             let x = nodeId % this.matrix.length;
@@ -148,11 +165,11 @@ export class Graph {
 
             // check if from the left and right the other side has been reached
             if (this.yellowsTurn && y == this.matrix.length - 1) {
-                this.gameOver |= 2;
+                this.redCutOff = true;
                 return;
             }
             if (!this.yellowsTurn && x == this.matrix.length - 1) {
-                this.gameOver |= 1;
+                this.yellowCutOff = true;
                 return;
             }
 
@@ -162,7 +179,7 @@ export class Graph {
 
     private _checkGameWon() {
         (this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue).forEach((nodeId) => {
-            if (this.gameOver > 2) return;
+            if (this.yellowWon || this.redWon || (this.yellowCutOff && this.redCutOff)) return;
 
             // translate id to coords
             let x = nodeId % this.matrix.length;
@@ -170,11 +187,11 @@ export class Graph {
 
             // check if the other side has been reached
             if (this.yellowsTurn && y == this.matrix.length - 1) {
-                this.gameOver |= 4;
+                this.yellowWon = true;
                 return;
             }
             if (!this.yellowsTurn && x == this.matrix.length - 1) {
-                this.gameOver |= 8;
+                this.redWon = true;
                 return;
             }
 
@@ -229,20 +246,20 @@ export class Graph {
     // check if to the left or right everything is cutoff for the other player
     private _checkCutOff(x: number, y: number): void {
         // if we have reached either side
-        if (this.yellowsTurn && !(this.gameOver & 2) && (x == 0 || x == this.matrix.length - 1)) {
+        if (this.yellowsTurn && !this.redCutOff && (x == 0 || x == this.matrix.length - 1)) {
             // red is temporarly cut off
-            this.gameOver |= 2;
+            this.redCutOff = true;
             for (let nextY = y + 1; nextY <= this.matrix.length - 2; nextY++) {
                 if (this.matrix[x][nextY] & 1) continue;
-                this.gameOver &= ~2;
+                this.redCutOff = false;
                 return;
             }
-        } else if (!this.yellowsTurn && !(this.gameOver & 1) && (y == 0 || y == this.matrix.length - 1)) {
+        } else if (!this.yellowsTurn && !this.yellowCutOff && (y == 0 || y == this.matrix.length - 1)) {
             // yellow is temporarly cut off
-            this.gameOver |= 1;
+            this.yellowCutOff = true;
             for (let nextX = x + 1; nextX <= this.matrix.length - 2; nextX++) {
                 if (this.matrix[nextX][y] & 2) continue;
-                this.gameOver &= ~1;
+                this.yellowCutOff = false;
                 return;
             }
         }

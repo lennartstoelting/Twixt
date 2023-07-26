@@ -90,6 +90,8 @@ class Controller {
             this.setupGameModal.style.display = "block";
         });
         this.undoMoveButton.addEventListener("click", () => {
+            // the very rare case that the last move was a game ending, toggling the modal to show
+            // if that move is being undone, the modalShown variable is not yet handeled
             this.model.undoMove() ? this._updateView() : console.log("no more positions in history array");
         });
         this.toggleGridlinesButton.addEventListener("click", () => {
@@ -166,15 +168,21 @@ class Controller {
         if (this.model.tryPlayingNode(x, y)) {
             this._updateView();
         }
-        if (this.model.mainGraph.gameOver < 3 || this.gameOverModalShown) return;
+        if (
+            (!this.model.mainGraph.yellowWon &&
+                !this.model.mainGraph.redWon &&
+                !(this.model.mainGraph.yellowCutOff && this.model.mainGraph.redCutOff)) ||
+            this.gameOverModalShown
+        )
+            return;
 
-        if (this.model.mainGraph.gameOver & 4) {
+        if (this.model.mainGraph.yellowWon) {
             this.gameOverInfo.innerHTML = `Yellow won`;
         }
-        if (this.model.mainGraph.gameOver & 8) {
+        if (this.model.mainGraph.redWon) {
             this.gameOverInfo.innerHTML = `Red won`;
         }
-        if (this.model.mainGraph.gameOver == 3) {
+        if (this.model.mainGraph.yellowCutOff && this.model.mainGraph.redCutOff) {
             this.gameOverInfo.innerHTML = `Nobody can win anymore`;
         }
         this.gameOverModal.style.display = "block";
