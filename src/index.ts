@@ -168,18 +168,13 @@ class Controller {
         if (this.model.tryPlayingNode(x, y)) {
             this._updateView();
         }
-        if (
-            (!this.model.mainGraph.yellowWon &&
-                !this.model.mainGraph.redWon &&
-                !(this.model.mainGraph.yellowCutOff && this.model.mainGraph.redCutOff)) ||
-            this.gameOverModalShown
-        )
+        if ((!this.model.mainGraph.gameWon && !(this.model.mainGraph.yellowCutOff && this.model.mainGraph.redCutOff)) || this.gameOverModalShown)
             return;
 
-        if (this.model.mainGraph.yellowWon) {
+        if (this.model.mainGraph.gameWon == 1) {
             this.gameOverInfo.innerHTML = `Yellow won`;
         }
-        if (this.model.mainGraph.redWon) {
+        if (this.model.mainGraph.gameWon == 2) {
             this.gameOverInfo.innerHTML = `Red won`;
         }
         if (this.model.mainGraph.yellowCutOff && this.model.mainGraph.redCutOff) {

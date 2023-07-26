@@ -10,8 +10,7 @@ export class Graph {
 
     yellowsTurn: boolean;
 
-    yellowWon: boolean;
-    redWon: boolean;
+    gameWon: number; // 1 = yellow, 2 = red
     yellowCutOff: boolean;
     redCutOff: boolean;
 
@@ -19,8 +18,7 @@ export class Graph {
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.yellowsTurn = yellowsTurn;
-        this.yellowWon = false;
-        this.redWon = false;
+        this.gameWon = 0;
         this.yellowCutOff = false;
         this.redCutOff = false;
         this.bridgeBitsOffset = 2;
@@ -81,9 +79,7 @@ export class Graph {
         }
 
         this._checkGameOver();
-        console.log(
-            `yellow won: ${this.yellowWon}, red won: ${this.redWon} \n yellow is cut off: ${this.yellowCutOff}, red is cut off: ${this.redCutOff}`
-        );
+        console.log(`gameWon: ${this.gameWon} \n yellow is cut off: ${this.yellowCutOff}, red is cut off: ${this.redCutOff}`);
 
         this.yellowsTurn = !this.yellowsTurn;
         return true;
@@ -145,7 +141,7 @@ export class Graph {
         }
 
         // if game already won or cutoff already detected earlier, no need to check anymore
-        if (this.yellowWon || this.redWon || (this.yellowCutOff && this.redCutOff)) return;
+        if (this.gameWon != 0 || (this.yellowCutOff && this.redCutOff)) return;
         if (this.yellowsTurn && this.redCutOff) return;
         if (!this.yellowsTurn && this.yellowCutOff) return;
 
@@ -155,7 +151,7 @@ export class Graph {
         let nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, 0) || this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1);
 
         cutOffNodeIdQueue.forEach((nodeId) => {
-            if (this.yellowWon || this.redWon || (this.yellowCutOff && this.redCutOff)) return;
+            if (this.gameWon != 0 || (this.yellowCutOff && this.redCutOff)) return;
 
             // translate id to coords
             let x = nodeId % this.matrix.length;
@@ -179,7 +175,7 @@ export class Graph {
 
     private _checkGameWon() {
         (this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue).forEach((nodeId) => {
-            if (this.yellowWon || this.redWon || (this.yellowCutOff && this.redCutOff)) return;
+            if (this.gameWon != 0 || (this.yellowCutOff && this.redCutOff)) return;
 
             // translate id to coords
             let x = nodeId % this.matrix.length;
@@ -187,11 +183,11 @@ export class Graph {
 
             // check if the other side has been reached
             if (this.yellowsTurn && y == this.matrix.length - 1) {
-                this.yellowWon = true;
+                this.gameWon = 1;
                 return;
             }
             if (!this.yellowsTurn && x == this.matrix.length - 1) {
-                this.redWon = true;
+                this.gameWon = 2;
                 return;
             }
 
