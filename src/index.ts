@@ -168,16 +168,15 @@ class Controller {
         if (this.model.tryPlayingNode(x, y)) {
             this._updateView();
         }
-        if ((!this.model.mainGraph.gameWon && !(this.model.mainGraph.yellowCutOff && this.model.mainGraph.redCutOff)) || this.gameOverModalShown)
-            return;
+        if (this.model.mainGraph.gameOver == 0 || this.gameOverModalShown) return;
 
-        if (this.model.mainGraph.gameWon == 1) {
+        if (this.model.mainGraph.gameOver == 1) {
             this.gameOverInfo.innerHTML = `Yellow won`;
         }
-        if (this.model.mainGraph.gameWon == 2) {
+        if (this.model.mainGraph.gameOver == 2) {
             this.gameOverInfo.innerHTML = `Red won`;
         }
-        if (this.model.mainGraph.yellowCutOff && this.model.mainGraph.redCutOff) {
+        if (this.model.mainGraph.gameOver == 3) {
             this.gameOverInfo.innerHTML = `Nobody can win anymore`;
         }
         this.gameOverModal.style.display = "block";

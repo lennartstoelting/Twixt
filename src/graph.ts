@@ -10,7 +10,7 @@ export class Graph {
 
     yellowsTurn: boolean;
 
-    gameWon: number; // 1 = yellow, 2 = red
+    gameOver: number; // 1 = yellow, 2 = red, 3 = nobody can win
     yellowCutOff: boolean;
     redCutOff: boolean;
 
@@ -18,7 +18,7 @@ export class Graph {
 
     constructor(tilesAcross: number, yellowsTurn: boolean) {
         this.yellowsTurn = yellowsTurn;
-        this.gameWon = 0;
+        this.gameOver = 0;
         this.yellowCutOff = false;
         this.redCutOff = false;
         this.bridgeBitsOffset = 2;
@@ -79,7 +79,7 @@ export class Graph {
         }
 
         this._checkGameOver();
-        console.log(`gameWon: ${this.gameWon} \n yellow is cut off: ${this.yellowCutOff}, red is cut off: ${this.redCutOff}`);
+        console.log(`gameOver: ${this.gameOver} \n yellow is cut off: ${this.yellowCutOff}, red is cut off: ${this.redCutOff}`);
 
         this.yellowsTurn = !this.yellowsTurn;
         return true;
@@ -141,18 +141,16 @@ export class Graph {
         }
 
         // if game already won or cutoff already detected earlier, no need to check anymore
-        if (this.gameWon != 0 || (this.yellowCutOff && this.redCutOff)) return;
+        if (this.gameOver != 0) return;
         if (this.yellowsTurn && this.redCutOff) return;
         if (!this.yellowsTurn && this.yellowCutOff) return;
 
         // this could potentially be turned into two class variables too
         let cutOffNodeIdQueue = new Set(this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue);
 
-        let nodeAdded = this._addFlankingNodes(cutOffNodeIdQueue, 0) || this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1);
+        let nodesAdded = this._addFlankingNodes(cutOffNodeIdQueue, 0) || this._addFlankingNodes(cutOffNodeIdQueue, this.matrix.length - 1);
 
         cutOffNodeIdQueue.forEach((nodeId) => {
-            if (this.gameWon != 0 || (this.yellowCutOff && this.redCutOff)) return;
-
             // translate id to coords
             let x = nodeId % this.matrix.length;
             let y = Math.floor(nodeId / this.matrix.length);
@@ -162,20 +160,23 @@ export class Graph {
             // check if from the left and right the other side has been reached
             if (this.yellowsTurn && y == this.matrix.length - 1) {
                 this.redCutOff = true;
-                return;
-            }
-            if (!this.yellowsTurn && x == this.matrix.length - 1) {
+            } else if (!this.yellowsTurn && x == this.matrix.length - 1) {
                 this.yellowCutOff = true;
-                return;
             }
 
-            if (nodeAdded) this._nextNodesForSet(x, y, cutOffNodeIdQueue);
+            if (this.yellowCutOff && this.redCutOff) this.gameOver = 3;
+
+            if (this.gameOver != 0) return;
+            if (this.yellowsTurn && this.redCutOff) return;
+            if (!this.yellowsTurn && this.yellowCutOff) return;
+
+            if (nodesAdded) this._nextNodesForSet(x, y, cutOffNodeIdQueue);
         });
     }
 
     private _checkGameWon() {
         (this.yellowsTurn ? this.yellowsConnectedNodesQueue : this.redsConnectedNodesQueue).forEach((nodeId) => {
-            if (this.gameWon != 0 || (this.yellowCutOff && this.redCutOff)) return;
+            if (this.gameOver != 0) return;
 
             // translate id to coords
             let x = nodeId % this.matrix.length;
@@ -183,11 +184,11 @@ export class Graph {
 
             // check if the other side has been reached
             if (this.yellowsTurn && y == this.matrix.length - 1) {
-                this.gameWon = 1;
+                this.gameOver = 1;
                 return;
             }
             if (!this.yellowsTurn && x == this.matrix.length - 1) {
-                this.gameWon = 2;
+                this.gameOver = 2;
                 return;
             }
 
@@ -222,21 +223,21 @@ export class Graph {
 
     // for cutoff detection we incorporate the nodes on either edge
     private _addFlankingNodes(idQueue: Set<number>, side: number): boolean {
-        let nodeAdded = false;
+        let nodesAdded = false;
         for (let i = 1; i < this.matrix.length - 1; i++) {
             if (this.yellowsTurn) {
                 if (!((this.matrix[side][i] & 3) == 1)) {
                     break;
                 }
                 idQueue.add(side + i * this.matrix.length);
-                nodeAdded = true;
+                nodesAdded = true;
             } else {
                 if (!((this.matrix[i][side] & 3) == 2)) break;
                 idQueue.add(i + side * this.matrix.length);
-                nodeAdded = true;
+                nodesAdded = true;
             }
         }
-        return nodeAdded;
+        return nodesAdded;
     }
 
     // check if to the left or right everything is cutoff for the other player
